@@ -1,0 +1,5 @@
+package com.tradearena.authservice.model;
+
+public class Address {
+
+}

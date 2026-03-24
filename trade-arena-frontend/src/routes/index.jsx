@@ -4,6 +4,7 @@ import AdminLayout from '../layouts/AdminLayout'
 
 import Login from '../pages/Login'
 import Register from '../pages/Register'
+import VerifyOtp from '../pages/VerifyOtp'
 
 const router = createBrowserRouter([
     {
@@ -13,6 +14,10 @@ const router = createBrowserRouter([
     {
         path: '/register',
         element: <Register/>,
+    },
+    {
+        path: '/verify-user',
+        element: <VerifyOtp/>,
     },
     {
         path: '/',

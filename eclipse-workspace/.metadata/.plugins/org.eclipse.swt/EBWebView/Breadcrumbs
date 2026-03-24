@@ -1,93 +1,54 @@
-1:34:00 Tab2 FinishNav25
-1:34:00 Tab2 PageLoad
-1:39:04 Tab2 StartNav26 #typed
-1:39:04 Tab2 FinishNav26
-1:39:04 Tab2 PageLoad
-1:39:14 Tab2 StartNav27 #typed
-1:39:14 Tab2 FinishNav27
-1:39:14 Tab2 PageLoad
-1:39:17 Tab2 StartNav28 #typed
-1:39:17 Tab2 FinishNav28
-1:39:17 Tab2 PageLoad
-1:39:19 Tab2 StartNav29 #typed
-1:39:19 Tab2 FinishNav29
-1:39:19 Tab2 PageLoad
-1:39:22 Tab2 StartNav30 #typed
-1:39:22 Tab2 FinishNav30
-1:39:22 Tab2 PageLoad
-1:39:22 Tab2 StartNav31 #typed
-1:39:22 Tab2 FinishNav31
-1:39:22 Tab2 PageLoad
-1:39:44 Tab2 StartNav32 #typed
-1:39:44 Tab2 FinishNav32
-1:39:44 Tab2 PageLoad
-1:39:45 Tab2 StartNav33 #typed
-1:39:45 Tab2 FinishNav33
-1:39:45 Tab2 PageLoad
-1:40:56 Tab2 StartNav34 #typed
-1:40:56 Tab2 FinishNav34
-1:40:56 Tab2 PageLoad
-1:40:58 Tab2 StartNav35 #typed
-1:40:58 Tab2 FinishNav35
-1:40:58 Tab2 PageLoad
-1:41:04 Tab2 StartNav36 #typed
-1:41:04 Tab2 FinishNav36
-1:41:04 Tab2 PageLoad
-1:42:11 Tab2 StartNav37 #typed
-1:42:11 Tab2 FinishNav37
-1:42:11 Tab2 PageLoad
-1:42:15 Tab2 StartNav38 #typed
-1:42:15 Tab2 FinishNav38
-1:42:15 Tab2 PageLoad
-1:42:18 Tab2 StartNav39 #typed
-1:42:18 Tab2 FinishNav39
-1:42:18 Tab2 PageLoad
-1:43:37 Tab2 StartNav40 #typed
-1:43:37 Tab2 FinishNav40
-1:43:37 Tab2 PageLoad
-1:43:39 Tab2 StartNav41 #typed
-1:43:39 Tab2 FinishNav41
-1:43:39 Tab2 PageLoad
-1:43:59 Tab2 StartNav42 #typed
-1:43:59 Tab2 FinishNav42
-1:43:59 Tab2 PageLoad
-1:44:04 Tab2 StartNav43 #typed
-1:44:04 Tab2 FinishNav43
-1:44:04 Tab2 PageLoad
-1:44:06 Tab2 StartNav44 #typed
-1:44:06 Tab2 FinishNav44
-1:44:06 Tab2 PageLoad
-1:44:21 Tab2 StartNav45 #typed
-1:44:21 Tab2 FinishNav45
-1:44:21 Tab2 PageLoad
-1:44:23 Tab2 StartNav46 #typed
-1:44:23 Tab2 FinishNav46
-1:44:23 Tab2 PageLoad
-1:44:27 Tab2 StartNav47 #typed
-1:44:27 Tab2 FinishNav47
-1:44:27 Tab2 PageLoad
-1:49:31 Tab2 StartNav48 #typed
-1:49:31 Tab2 FinishNav48
-1:49:31 Tab2 PageLoad
-1:49:36 Tab2 StartNav49 #typed
-1:49:36 Tab2 FinishNav49
-1:49:36 Tab2 PageLoad
-1:49:45 Tab2 StartNav50 #typed
-1:49:45 Tab2 FinishNav50
-1:49:45 Tab2 PageLoad
-1:49:49 Tab2 StartNav51 #typed
-1:49:49 Tab2 FinishNav51
-1:49:49 Tab2 PageLoad
-1:50:33 Tab2 StartNav52 #typed
-1:50:33 Tab2 FinishNav52
-1:50:33 Tab2 PageLoad
-1:53:10 Tab1 StartNav53 #typed
-1:53:10 Tab1 FinishNav53
-1:53:10 Tab1 PageLoad
-22:44:54 Memory Pressure: Moderate
-22:45:04 Memory Pressure: Moderate
-22:45:14 Memory Pressure: None
-45:43:40 Memory Pressure: Moderate
-45:43:50 Memory Pressure: Moderate
-45:44:00 Memory Pressure: Moderate
-45:44:10 Memory Pressure: None
+21:10:49 Tab27 StartNav223 #typed
+21:10:49 Tab27 FinishNav223
+21:10:49 Tab27 PageLoad
+21:10:50 Tab27 StartNav224 #typed
+21:10:50 Tab27 FinishNav224
+21:10:50 Tab27 PageLoad
+21:13:03 Tab27 StartNav225 #typed
+21:13:03 Tab27 FinishNav225
+21:13:03 Tab27 PageLoad
+21:13:08 Tab27 StartNav226 #typed
+21:13:08 Tab27 FinishNav226
+21:13:08 Tab27 PageLoad
+21:13:22 Tab27 StartNav227 #typed
+21:13:22 Tab27 FinishNav227
+21:13:22 Tab27 PageLoad
+21:13:33 Tab27 StartNav228 #typed
+21:13:33 Tab27 FinishNav228
+21:13:33 Tab27 PageLoad
+21:13:45 Tab27 StartNav229 #typed
+21:13:45 Tab27 FinishNav229
+21:13:45 Tab27 PageLoad
+21:13:57 Tab27 StartNav230 #typed
+21:13:57 Tab27 FinishNav230
+21:13:57 Tab27 PageLoad
+21:13:58 Tab27 StartNav231 #typed
+21:13:58 Tab27 FinishNav231
+21:13:58 Tab27 PageLoad
+21:13:59 Tab27 StartNav232 #typed
+21:14:00 Tab27 FinishNav232
+21:14:00 Tab27 PageLoad
+21:14:06 Tab27 StartNav233 #typed
+21:14:06 Tab27 FinishNav233
+21:14:06 Tab27 PageLoad
+21:14:13 Tab27 StartNav234 #typed
+21:14:13 Tab27 FinishNav234
+21:14:13 Tab27 PageLoad
+21:14:16 Tab27 StartNav235 #typed
+21:14:16 Tab27 FinishNav235
+21:14:16 Tab27 PageLoad
+21:14:23 Tab27 StartNav236 #typed
+21:14:23 Tab27 FinishNav236
+21:14:23 Tab27 PageLoad
+21:14:24 Tab27 StartNav237 #typed
+21:14:24 Tab27 FinishNav237
+21:14:24 Tab27 PageLoad
+21:14:40 Tab27 StartNav238 #typed
+21:14:40 Tab27 FinishNav238
+21:14:40 Tab27 PageLoad
+21:26:32 Tab24 StartNav239 #typed
+21:26:32 Tab24 FinishNav239
+21:26:32 Tab24 PageLoad
+21:26:39 Tab24 StartNav240 #typed
+21:26:39 Tab24 FinishNav240
+21:26:39 Tab24 PageLoad

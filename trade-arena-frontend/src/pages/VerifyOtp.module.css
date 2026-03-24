@@ -1,0 +1,114 @@
+.page {
+  min-height: 100vh;
+  background: #0f1624;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  padding: 24px 0;
+}
+
+.card {
+  position: relative;
+  z-index: 2;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 36px 32px;
+  width: 420px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.35);
+}
+
+.logo {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a1a1a;
+  letter-spacing: -0.4px;
+  line-height: 1.2;
+  margin-bottom: 20px;
+}
+
+.logo span {
+  color: #2874f0;
+  font-size: 11px;
+  font-style: italic;
+  display: block;
+  font-weight: 400;
+  margin-top: 2px;
+}
+
+.heading {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+
+.sub {
+  font-size: 13px;
+  color: #999;
+  margin-bottom: 20px;
+}
+
+.otpBox {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin: 20px 0 30px;
+}
+
+/* each OTP input */
+.otpInput {
+  width: 52px;
+  height: 52px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 600;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  outline: none;
+  transition: all 0.2s ease;
+  background: #fafafa;
+}
+
+/* focus effect */
+.otpInput:focus {
+  border-color: #2874f0;
+  box-shadow: 0 0 0 3px rgba(40, 116, 240, 0.15);
+  background: #fff;
+}
+
+/* OTP button reuse style consistency */
+.otpBtn {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  background: #2874f0;
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  border: none;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.otpBtn:hover {
+  background: #1a5dc9;
+}
+
+.otpBtn:disabled {
+  background: #a0b8e8;
+  cursor: not-allowed;
+}
+
+/* small helper text */
+.otpHint {
+  font-size: 12px;
+  color: #999;
+  text-align: center;
+  margin-top: 10px;
+}
+
+.otpHint b {
+  color: #2874f0;
+}
