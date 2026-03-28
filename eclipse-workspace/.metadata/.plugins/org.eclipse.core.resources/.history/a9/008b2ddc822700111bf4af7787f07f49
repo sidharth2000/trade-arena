@@ -1,0 +1,110 @@
+package com.tradearena.authservice.service;
+
+import java.util.Map;
+import java.util.Optional;
+import java.util.Random;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.tradearena.authservice.dto.ApiResponse;
+import com.tradearena.authservice.dto.RegisterRequest;
+import com.tradearena.authservice.dto.VerifyOtpRequest;
+import com.tradearena.authservice.model.AuthProvider;
+import com.tradearena.authservice.model.Role;
+import com.tradearena.authservice.model.User;
+import com.tradearena.authservice.model.VerificationToken;
+import com.tradearena.authservice.repository.UserRepository;
+import com.tradearena.authservice.repository.VerificationTokenRepository;
+
+@Service
+public class AuthServiceImpl implements AuthService {
+
+	@Autowired
+	private UserRepository userRepository;
+
+	@Autowired
+	private VerificationTokenRepository verificationTokenRepository;
+
+	@Autowired
+	private EmailService emailService;
+
+	@Autowired
+	private BCryptPasswordEncoder passwordEncoder;
+
+	@Override
+	@Transactional
+	public ResponseEntity<ApiResponse> register(RegisterRequest request) {
+
+		User user = userRepository.findByEmail(request.getEmail()).orElse(null);
+
+		if (user != null && Boolean.TRUE.equals(user.getIsVerified())) {
+			return ResponseEntity.status(HttpStatus.CONFLICT).body(new ApiResponse("Email already registered", null));
+		}
+
+		if (user == null) {
+			user = new User();
+			user.setFirstName(request.getFirstName());
+			user.setLastName(request.getLastName());
+			user.setEmail(request.getEmail());
+			user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+			user.setRole(Role.USER);
+			user.setProvider(AuthProvider.LOCAL);
+			user.setIsVerified(false);
+
+			user = userRepository.save(user);
+		}
+
+		// 🔥 ALWAYS DELETE OLD TOKEN (if exists)
+		verificationTokenRepository.findByUser(user).ifPresent(verificationTokenRepository::delete);
+
+		// 🔥 ALWAYS CREATE NEW OTP
+		String otp = String.format("%04d", new Random().nextInt(10000));
+
+		VerificationToken verificationToken = new VerificationToken(otp, user);
+		verificationTokenRepository.save(verificationToken);
+
+		emailService.sendOtpEmail(user.getEmail(), otp);
+
+		return ResponseEntity.ok(new ApiResponse("OTP sent to your email.", Map.of("email", user.getEmail())));
+	}
+
+	@Override
+	@Transactional
+	public ResponseEntity<ApiResponse> verifyOtp(VerifyOtpRequest request) {
+
+		User user = userRepository.findByEmail(request.getEmail()).orElse(null);
+
+		if (user == null) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse("User not found", null));
+		}
+
+		VerificationToken verificationToken = verificationTokenRepository.findByUser(user).orElse(null);
+
+		if (verificationToken == null) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(new ApiResponse("OTP not found. Please register again.", null));
+		}
+
+		if (verificationToken.isExpired()) {
+			verificationTokenRepository.delete(verificationToken);
+			return ResponseEntity.status(HttpStatus.GONE)
+					.body(new ApiResponse("OTP has expired. Please register again.", null));
+		}
+
+		if (!verificationToken.getToken().equals(request.getOtp())) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("Invalid OTP", null));
+		}
+
+		user.setIsVerified(true);
+		userRepository.save(user);
+
+		verificationTokenRepository.delete(verificationToken);
+
+		return ResponseEntity.ok(new ApiResponse("Email verified successfully. You can now log in.", null));
+	}
+}

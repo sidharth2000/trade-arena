@@ -1,0 +1,116 @@
+.nav {
+  background: var(--nav-bg) !important;
+  box-shadow: none !important;
+}
+
+.toolbar {
+  gap: 16px;
+  padding: 0 32px !important;
+}
+
+.logo {
+  cursor: pointer;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+
+.logoMain {
+  color: #fff;
+  font-weight: 600;
+  font-size: 18px;
+  letter-spacing: -0.3px;
+}
+
+.logoSub {
+  color: #ffe500;
+  font-size: 10px;
+  font-style: italic;
+}
+
+.search {
+  flex: 1;
+  max-width: 560px;
+  display: flex;
+  height: 36px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.searchInput {
+  flex: 1;
+  background: #fff;
+  border: none;
+  outline: none;
+  padding: 0 14px;
+  font-size: 13px;
+  color: #333;
+}
+
+.searchInput::placeholder {
+  color: #aaa;
+}
+
+.searchBtn {
+  width: 44px;
+  background: #ff6161;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.themeBtn {
+  width: 34px !important;
+  height: 34px !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  color: #fff !important;
+}
+
+.loginBtn {
+  background: #fff !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  height: 34px !important;
+}
+
+.sellBtn {
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+  color: #fff !important;
+  font-size: 13px !important;
+  height: 34px !important;
+}
+
+.sellBtn:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.cart {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0 8px;
+}
+
+.cart:hover {
+  opacity: 0.85;
+}
+
+.cartLabel {
+  margin-left: 2px;
+}

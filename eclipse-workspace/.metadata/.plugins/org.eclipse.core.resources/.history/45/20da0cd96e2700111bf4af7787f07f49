@@ -1,0 +1,5 @@
+package com.tradearena.apigateway.util;
+
+public class JwtUtil {
+
+}

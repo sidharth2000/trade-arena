@@ -1,0 +1,5 @@
+package com.tradearena.adminservice.models;
+
+public enum ResponseType {
+
+}

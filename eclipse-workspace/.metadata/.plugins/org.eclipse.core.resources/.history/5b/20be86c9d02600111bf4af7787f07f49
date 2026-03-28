@@ -1,0 +1,5 @@
+package com.tradearena.authservice.controller;
+
+public class AuthController {
+
+}

@@ -1,0 +1,5 @@
+package com.tradearena.apigateway.filter;
+
+public class AuthFilter {
+
+}

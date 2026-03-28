@@ -1,0 +1,1 @@
+JWT security will be enabled once auth-service provides login token endpoint.
