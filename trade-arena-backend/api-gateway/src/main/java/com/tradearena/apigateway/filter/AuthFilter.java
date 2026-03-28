@@ -22,13 +22,20 @@ public class AuthFilter implements GlobalFilter, Ordered {
     private static final List<String> PUBLIC_PATHS = List.of(
             "/auth/register",
             "/auth/verify",
-            "/auth/login"
+            "/auth/login",
+            "/auth/verify-otp",
+
+            // allow notification "public-ish" endpoints through gateway
+            "/notifications/actuator",
+            "/notifications/ping",
+            "/notifications/stream"
     );
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange,
                              org.springframework.cloud.gateway.filter.GatewayFilterChain chain) {
 
+        System.out.println("✅ AuthFilter HIT: " + exchange.getRequest().getURI().getPath());
         String path = exchange.getRequest().getURI().getPath();
 
         // Allow public endpoints

@@ -17,6 +17,21 @@ spring:
           uri: http://localhost:8082
           predicates:
             - Path=/admin/**
+
+        - id: notification-service
+          uri: lb://NOTIFICATION-SERVICE
+          predicates:
+            - Path=/notifications/**
+          filters:
+            - StripPrefix=1
+
+#        - id: notification-service
+#          uri: lb://NOTIFICATION-SERVICE
+#          predicates:
+#            - Path=/notifications/**
+#          filters:
+#            -
+#            - RewritePath=/notifications/(?<segment>.*), /api/notifications/${segment}
     
 
 app:
