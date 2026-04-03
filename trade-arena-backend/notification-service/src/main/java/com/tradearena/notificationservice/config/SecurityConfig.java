@@ -1,50 +1,55 @@
 package com.tradearena.notificationservice.config;
 
-import com.tradearena.notificationservice.config.jwt.JwtAuthFilter;
-import org.springframework.beans.factory.annotation.Value;
+import com.tradearena.notificationservice.security.JwtAuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.web.cors.*;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
 import java.util.List;
 
+/**
+ * SecurityConfig
+ *
+ * PERMITTED (no JWT required):
+ *   POST /api/notifications/send       — internal service-to-service calls
+ *   GET  /api/notifications/stream/**  — SSE (browser EventSource cannot send auth headers)
+ *   GET  /actuator/**                  — health checks for Eureka
+ *
+ * SECURED (JWT required):
+ *   All other /api/notifications/** endpoints
+ */
 @Configuration
+@EnableWebSecurity
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
-
-    @Value("${trade-arena.cors.allowed-origins}")
-    private String allowedOrigins;
 
     public SecurityConfig(JwtAuthFilter jwtAuthFilter) {
         this.jwtAuthFilter = jwtAuthFilter;
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        // NOTE: Notification service is stateless: no sessions.
-        http.csrf(csrf -> csrf.disable());
-
-        http.cors(Customizer.withDefaults());
-
-        // Authorization rules:
-        // - SSE stream endpoint permitted (EventSource does not easily pass Authorization header)
-        // - /send permitted for internal calls (simple option)
-        // - everything else requires JWT
-        http.authorizeHttpRequests(auth -> auth
-                .requestMatchers("/actuator/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/notifications/stream/**").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/notifications/send").permitAll()
-                .anyRequest().authenticated()
-        );
-
-        // Add JWT filter before Spring's default authentication
-        http.addFilterBefore(jwtAuthFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .csrf(AbstractHttpConfigurer::disable)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("POST", "/api/notifications/send").permitAll()
+                        .requestMatchers("/api/notifications/stream/**").permitAll()
+                        .requestMatchers("/actuator/**").permitAll()
+                        .anyRequest().authenticated()
+                )
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -52,20 +57,14 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-
-        // Allow multiple origins via comma-separated property
-        List<String> origins = Arrays.stream(allowedOrigins.split(","))
-                .map(String::trim)
-                .filter(s -> !s.isBlank())
-                .toList();
-
-        config.setAllowedOrigins(origins);
+        config.setAllowedOrigins(List.of(
+                "http://localhost:5173",
+                "http://localhost:3000"
+        ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("*"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
         config.setAllowCredentials(true);
-
-        // Important for SSE: allow browser to read event stream
-        config.setExposedHeaders(List.of("Content-Type"));
+        config.setExposedHeaders(List.of("Content-Type", "Cache-Control", "Connection"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
