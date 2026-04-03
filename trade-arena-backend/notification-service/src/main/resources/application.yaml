@@ -5,25 +5,41 @@ spring:
   application:
     name: notification-service
 
+  # ========================================
+  # Active profile: override per environment
+  # dev  → uses application-dev.yaml
+  # prod → uses application-prod.yaml
+  # ========================================
+  profiles:
+    active: dev
+
+  # ========================================
+  # PostgreSQL - Dedicated notification_db
+  # ========================================
   datasource:
-    url: jdbc:postgresql://localhost:5432/tradearena_notification
+    url: jdbc:postgresql://localhost:5432/notification_db
     username: postgres
     password: root
     driver-class-name: org.postgresql.Driver
 
+  # JPA / Hibernate
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: false
+    show-sql: true
     properties:
       hibernate:
+        format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: false
 
+  # ========================================
+  # SMTP Email Configuration (Gmail)
+  # Credentials overridden per profile below
+  # ========================================
   mail:
     host: smtp.gmail.com
     port: 587
-    username: your_email@example.com
+    username: your_email@gmail.com
     password: your_app_password
     properties:
       mail:
@@ -31,35 +47,42 @@ spring:
           auth: true
           starttls:
             enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 3000
+          writetimeout: 5000
 
-  management:
-    endpoints:
-      web:
-        exposure:
-          include: health,info
-    endpoint:
-      health:
-        show-details: always
-    health:
-      mail:
-        enabled: false
-
+# ========================================
+# Eureka Client - Service Discovery
+# ========================================
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka
+      defaultZone: http://localhost:8761/eureka/
     register-with-eureka: true
     fetch-registry: true
+  instance:
+    prefer-ip-address: true
 
+# ========================================
+# App Custom Properties
+# NOTE: key is trade-arena.mail.from
+# (matches @Value("${trade-arena.mail.from}") in EmailService)
+# ========================================
 trade-arena:
   mail:
-    from: "Trade Arena <no-reply@tradearena.com>"
-
+    from: no-reply@tradearena.com
   jwt:
-    # Must match API-Gateway/Auth secret (HS256 needs a long enough secret)
-    secret: "REPLACE_WITH_A_LONG_RANDOM_256BIT_SECRET_KEY"
-    clock-skew-seconds: 60
+    secret: your_jwt_secret_key_must_be_at_least_256_bits_long_replace_this
 
-  cors:
-    # If you use React Vite
-    allowed-origins: "http://localhost:5173"
+app:
+  sse:
+    timeout: 300000
+
+# ========================================
+# Logging
+# ========================================
+logging:
+  level:
+    com.tradearena.notificationservice: DEBUG
+    org.springframework.mail: DEBUG

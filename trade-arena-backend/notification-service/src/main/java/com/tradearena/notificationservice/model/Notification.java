@@ -24,11 +24,13 @@ public class Notification {
     private String message;
 
     /**
-     * Example: OUTBID, AUCTION_WIN, PAYMENT_REMINDER, BID_PLACED,
-     * PAYMENT_SUCCESS, ACCOUNT_RESTRICTED, FALLBACK_OFFER
+     * Stored as the enum name string (e.g. "OUTBID", "AUCTION_WIN").
+     * Using @Enumerated(EnumType.STRING) so DB values are human-readable
+     * and safe if enum ordinals ever change.
      */
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 80)
-    private String type;
+    private NotificationType type;
 
     @Column(nullable = false)
     private Boolean isRead = false;
@@ -36,16 +38,29 @@ public class Notification {
     @Column(nullable = false)
     private LocalDateTime timestamp;
 
+    /**
+     * Optional ID of the related entity (product, auction, order).
+     * Persisted so the frontend can deep-link to the relevant page.
+     * Populated from NotificationRequest.referenceId.
+     */
+    @Column(name = "reference_id")
+    private Long referenceId;
+
     public Notification() {
         // JPA
     }
 
-    public Notification(Long userId, String message, String type) {
+    public Notification(Long userId, String message, NotificationType type) {
         this.userId = userId;
         this.message = message;
         this.type = type;
         this.isRead = false;
         this.timestamp = LocalDateTime.now();
+    }
+
+    public Notification(Long userId, String message, NotificationType type, Long referenceId) {
+        this(userId, message, type);
+        this.referenceId = referenceId;
     }
 
     @PrePersist
@@ -58,51 +73,21 @@ public class Notification {
         }
     }
 
-    public Long getNotificationId() {
-        return notificationId;
-    }
+    // Getters
+    public Long getNotificationId()     { return notificationId; }
+    public Long getUserId()             { return userId; }
+    public String getMessage()          { return message; }
+    public NotificationType getType()   { return type; }
+    public Boolean getIsRead()          { return isRead; }
+    public LocalDateTime getTimestamp() { return timestamp; }
+    public Long getReferenceId()        { return referenceId; }
 
-    public Long getUserId() {
-        return userId;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public Boolean getIsRead() {
-        return isRead;
-    }
-
-    public LocalDateTime getTimestamp() {
-        return timestamp;
-    }
-
-    public void setNotificationId(Long notificationId) {
-        this.notificationId = notificationId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public void setIsRead(Boolean read) {
-        isRead = read;
-    }
-
-    public void setTimestamp(LocalDateTime timestamp) {
-        this.timestamp = timestamp;
-    }
+    // Setters
+    public void setNotificationId(Long notificationId) { this.notificationId = notificationId; }
+    public void setUserId(Long userId)                 { this.userId = userId; }
+    public void setMessage(String message)             { this.message = message; }
+    public void setType(NotificationType type)         { this.type = type; }
+    public void setIsRead(Boolean read)                { isRead = read; }
+    public void setTimestamp(LocalDateTime timestamp)  { this.timestamp = timestamp; }
+    public void setReferenceId(Long referenceId)       { this.referenceId = referenceId; }
 }

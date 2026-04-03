@@ -1,11 +1,13 @@
 package com.tradearena.notificationservice.service;
 
 import com.tradearena.notificationservice.dto.NotificationRequest;
+import com.tradearena.notificationservice.model.NotificationType;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.format.DateTimeFormatter;
@@ -19,34 +21,47 @@ public class EmailService {
     @Value("${trade-arena.mail.from}")
     private String fromAddress;
 
-    // Only these types trigger emails (as per your requirements)
-    private static final Set<String> EMAIL_TYPES = Set.of(
-            "AUCTION_WIN",
-            "PAYMENT_REMINDER",
-            "OUTBID",
-            "PAYMENT_SUCCESS",
-            "ACCOUNT_RESTRICTED",
-            "FALLBACK_OFFER",
-            "BID_PLACED" // you said bid placed is in-app + email to seller
+    /**
+     * Only these types trigger emails (critical events as per requirements).
+     * Uses the NotificationType enum for type safety.
+     */
+    private static final Set<NotificationType> EMAIL_TYPES = Set.of(
+            NotificationType.AUCTION_WIN,
+            NotificationType.PAYMENT_REMINDER,
+            NotificationType.OUTBID,
+            NotificationType.PAYMENT_SUCCESS,
+            NotificationType.ACCOUNT_RESTRICTED,
+            NotificationType.FALLBACK_OFFER,
+            NotificationType.BID_PLACED
     );
 
     public EmailService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
     }
 
-    public boolean isEmailType(String type) {
+    /**
+     * Check whether a given NotificationType should trigger an email.
+     * Used by NotificationService before calling sendEmail().
+     */
+    public boolean isEmailType(NotificationType type) {
         return EMAIL_TYPES.contains(type);
     }
 
+    /**
+     * Sends an HTML email for the given notification request.
+     * Runs asynchronously on the emailTaskExecutor thread pool (see AsyncConfig)
+     * so it does not block the HTTP response or SSE push.
+     */
+    @Async("emailTaskExecutor")
     public void sendEmail(NotificationRequest req) {
         if (req.getUserEmail() == null || req.getUserEmail().isBlank()) {
-            return; // nothing to send to
+            return;
         }
         if (!isEmailType(req.getType())) {
-            return; // do not email for non-critical types
+            return;
         }
 
-        String subject = subjectFor(req);
+        String subject = subjectFor(req.getType());
         String bodyHtml = bodyFor(req);
 
         try {
@@ -59,39 +74,38 @@ public class EmailService {
 
             mailSender.send(mimeMessage);
         } catch (MessagingException e) {
-            // In production you'd log to a proper logger + consider retry queue.
-            // For now we fail gracefully so API still returns success for in-app.
-            System.err.println("Email sending failed: " + e.getMessage());
+            // Fail gracefully — in-app notification already saved; email is best-effort.
+            System.err.println("Email sending failed for type=" + req.getType() + ": " + e.getMessage());
         }
     }
 
-    private String subjectFor(NotificationRequest req) {
-        return switch (req.getType()) {
-            case "AUCTION_WIN" -> "You won the auction on Trade Arena!";
-            case "OUTBID" -> "⚠You have been outbid!";
-            case "PAYMENT_REMINDER" -> "Payment reminder - action required";
-            case "PAYMENT_SUCCESS" -> "Payment successful";
-            case "ACCOUNT_RESTRICTED" -> "Account action required";
-            case "FALLBACK_OFFER" -> "You have a second-chance offer!";
-            case "BID_PLACED" -> "New bid received";
-            default -> "Trade Arena Notification";
+    private String subjectFor(NotificationType type) {
+        return switch (type) {
+            case AUCTION_WIN        -> "You won the auction on Trade Arena!";
+            case OUTBID             -> "You have been outbid!";
+            case PAYMENT_REMINDER   -> "Payment reminder - action required";
+            case PAYMENT_SUCCESS    -> "Payment successful";
+            case ACCOUNT_RESTRICTED -> "Account action required";
+            case FALLBACK_OFFER     -> "You have a second-chance offer!";
+            case BID_PLACED         -> "New bid received on your listing";
+            default                 -> "Trade Arena Notification";
         };
     }
 
     private String bodyFor(NotificationRequest req) {
-        // Keep simple, readable HTML (no external CSS).
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
         StringBuilder sb = new StringBuilder();
-        sb.append("<div style='font-family:Arial, sans-serif; line-height:1.5;'>")
-                .append("<h2>Trade Arena</h2>")
+        sb.append("<div style='font-family:Arial, sans-serif; line-height:1.6; max-width:600px;'>")
+                .append("<h2 style='color:#2c7a4b;'>Trade Arena</h2>")
                 .append("<p>").append(escape(req.getMessage())).append("</p>");
 
+        // Optional enrichment fields — only rendered when present (Bug #1 fix)
         if (req.getProductTitle() != null && !req.getProductTitle().isBlank()) {
             sb.append("<p><b>Product:</b> ").append(escape(req.getProductTitle())).append("</p>");
         }
         if (req.getBidAmount() != null) {
-            sb.append("<p><b>Bid Amount:</b> €").append(req.getBidAmount()).append("</p>");
+            sb.append("<p><b>Bid Amount:</b> &euro;").append(String.format("%.2f", req.getBidAmount())).append("</p>");
         }
         if (req.getAuctionId() != null) {
             sb.append("<p><b>Auction ID:</b> ").append(req.getAuctionId()).append("</p>");
@@ -101,16 +115,16 @@ public class EmailService {
         }
 
         sb.append("<hr/>")
-                .append("<p style='font-size:12px;color:#666;'>This is an automated message. Please do not reply.</p>")
+                .append("<p style='font-size:12px;color:#666;'>This is an automated message from Trade Arena. Please do not reply.</p>")
                 .append("</div>");
 
         return sb.toString();
     }
 
     private String escape(String text) {
-        // Minimal HTML escaping to avoid breaking email HTML.
+        if (text == null) return "";
         return text.replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;");
+                   .replace("<", "&lt;")
+                   .replace(">", "&gt;");
     }
 }

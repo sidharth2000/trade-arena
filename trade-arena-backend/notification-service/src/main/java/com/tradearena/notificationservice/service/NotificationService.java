@@ -31,8 +31,7 @@ public class NotificationService {
     }
 
     public SseEmitter subscribe(Long userId) {
-        // Keep connection open; clients can auto-reconnect if it drops.
-        SseEmitter emitter = new SseEmitter(0L); // 0 = no timeout (handled by proxy/browser)
+        SseEmitter emitter = new SseEmitter(0L); // 0 = no timeout
         emitters.put(userId, emitter);
 
         emitter.onCompletion(() -> emitters.remove(userId));
@@ -53,11 +52,12 @@ public class NotificationService {
 
     @Transactional
     public NotificationResponse send(NotificationRequest request) {
-        // 1) Persist in DB
+        // 1) Persist in DB — now correctly passing referenceId and using enum type
         Notification saved = repository.save(new Notification(
                 request.getUserId(),
                 request.getMessage(),
-                request.getType()
+                request.getType(),        // NotificationType enum (not raw String)
+                request.getReferenceId()  // Bug #2 fix: referenceId now persisted
         ));
 
         NotificationResponse response = toResponse(saved);
@@ -103,7 +103,6 @@ public class NotificationService {
                     .name("notification")
                     .data(payload));
         } catch (IOException e) {
-            // Client likely disconnected; cleanup
             emitters.remove(userId);
         }
     }
@@ -115,7 +114,8 @@ public class NotificationService {
                 n.getMessage(),
                 n.getType(),
                 n.getIsRead(),
-                n.getTimestamp()
+                n.getTimestamp(),
+                n.getReferenceId()
         );
     }
 }
