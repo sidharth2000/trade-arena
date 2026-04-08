@@ -1,0 +1,30 @@
+# ============================================================
+# Development Profile — application-dev.yaml
+# ============================================================
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/tradearena_product
+    username: postgres
+    password: root
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+
+# OpenFeign — Admin Service URL for category form lookup
+admin-service:
+  url: http://localhost:8082
+
+logging:
+  level:
+    com.tradearena.productservice: DEBUG
+    org.hibernate.SQL: DEBUG
