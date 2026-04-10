@@ -8,62 +8,23 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.List;
+import java.util.UUID;
 
-public interface ProductRepository extends JpaRepository<Product, Long> {
+public interface ProductRepository extends JpaRepository<Product, UUID> {
 
-    /** All listings by a specific seller */
-    List<Product> findBySellerIdOrderByCreatedAtDesc(Integer sellerId);
-
-    /** All active listings for marketplace browsing */
-    Page<Product> findByStatusOrderByCreatedAtDesc(ProductStatus status, Pageable pageable);
-
-    /** All listings in a specific category */
-    Page<Product> findByCategoryIdAndStatusOrderByCreatedAtDesc(
-            Integer categoryId, ProductStatus status, Pageable pageable);
-
-    /** Search by keyword in title or description */
     @Query("""
             SELECT p FROM Product p
-            WHERE p.status = :status
-              AND (LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
-                OR LOWER(p.description) LIKE LOWER(CONCAT('%', :keyword, '%')))
+            WHERE p.status <> com.tradearena.productservice.model.ProductStatus.REMOVED
+              AND (:categoryId    IS NULL OR p.categoryId    = :categoryId)
+              AND (:subCategoryId IS NULL OR p.subCategoryId = :subCategoryId)
+              AND (:sellerId      IS NULL OR p.sellerId      = :sellerId)
+              AND (:status        IS NULL OR p.status        = :status)
             ORDER BY p.createdAt DESC
             """)
-    Page<Product> searchByKeyword(
-            @Param("keyword") String keyword,
-            @Param("status") ProductStatus status,
+    Page<Product> findWithFilters(
+            @Param("categoryId")    UUID categoryId,
+            @Param("subCategoryId") UUID subCategoryId,
+            @Param("sellerId")      Long sellerId,
+            @Param("status")        ProductStatus status,
             Pageable pageable);
-
-    /** Search by keyword within a specific category */
-    @Query("""
-            SELECT p FROM Product p
-            WHERE p.status = :status
-              AND p.categoryId = :categoryId
-              AND (LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
-                OR LOWER(p.description) LIKE LOWER(CONCAT('%', :keyword, '%')))
-            ORDER BY p.createdAt DESC
-            """)
-    Page<Product> searchByKeywordAndCategory(
-            @Param("keyword") String keyword,
-            @Param("categoryId") Integer categoryId,
-            @Param("status") ProductStatus status,
-            Pageable pageable);
-
-    /** Price range filter */
-    @Query("""
-            SELECT p FROM Product p
-            WHERE p.status = :status
-              AND p.price BETWEEN :minPrice AND :maxPrice
-            ORDER BY p.createdAt DESC
-            """)
-    Page<Product> findByPriceRange(
-            @Param("minPrice") Double minPrice,
-            @Param("maxPrice") Double maxPrice,
-            @Param("status") ProductStatus status,
-            Pageable pageable);
-
-    /** All active auction listings */
-    Page<Product> findByStatusAndAuctionEnabledTrueOrderByAuctionEndTimeAsc(
-            ProductStatus status, Pageable pageable);
 }

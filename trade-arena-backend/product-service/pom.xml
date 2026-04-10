@@ -15,7 +15,7 @@
     <groupId>com.tradearena</groupId>
     <artifactId>product-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <n>product-service</n>
+    <name>product-service</name>
     <description>Product listing and management service for Trade Arena</description>
 
     <properties>
