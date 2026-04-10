@@ -20,15 +20,6 @@ public class NotificationController {
         this.service = service;
     }
 
-    /**
-     * Called by other microservices to trigger notifications.
-     *
-     * NOTE: By default we permit this endpoint without JWT (simple internal calls).
-     * In production, you can secure it using:
-     * - service-to-service token
-     * - mTLS
-     * - gateway-only access
-     */
     @PostMapping("/send")
     public ResponseEntity<NotificationResponse> send(@Valid @RequestBody NotificationRequest request) {
         return ResponseEntity.ok(service.send(request));
@@ -50,16 +41,6 @@ public class NotificationController {
         return ResponseEntity.ok(java.util.Map.of("updated", updated));
     }
 
-    /**
-     * SSE stream: frontend subscribes here for real-time push notifications.
-     * This endpoint is intentionally public (no JWT) in this implementation,
-     * because many frontends use EventSource which does NOT easily support Authorization headers.
-     *
-     * If you want it secured, you can:
-     * - pass token as query param (not ideal)
-     * - use cookie-based auth
-     * - use a custom SSE client (fetch-based streaming) with Authorization header
-     */
     @GetMapping("/stream/{userId}")
     public SseEmitter stream(@PathVariable Long userId) {
         return service.subscribe(userId);
