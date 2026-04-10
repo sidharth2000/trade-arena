@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tradearena.authservice.dto.ApiResponse;
+import com.tradearena.authservice.dto.LoginRequest;
 import com.tradearena.authservice.dto.RegisterRequest;
 import com.tradearena.authservice.dto.VerifyOtpRequest;
 import com.tradearena.authservice.service.AuthService;
@@ -28,4 +29,12 @@ public class AuthController {
     public ResponseEntity<ApiResponse> verifyOtp(@RequestBody VerifyOtpRequest request) {
         return authService.verifyOtp(request);
     }
+    
+    @PostMapping("/login")
+    public ResponseEntity<ApiResponse> login(@RequestBody LoginRequest request) {
+        return authService.login(request);
+    }
+    
+    
+    
 }

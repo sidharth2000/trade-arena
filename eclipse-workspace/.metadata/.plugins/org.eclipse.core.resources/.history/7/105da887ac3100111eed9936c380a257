@@ -1,0 +1,5 @@
+package com.tradearena.adminservice.controller;
+
+public class CategoryController {
+
+}

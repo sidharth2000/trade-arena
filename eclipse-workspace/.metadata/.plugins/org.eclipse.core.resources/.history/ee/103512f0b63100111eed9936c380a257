@@ -1,0 +1,5 @@
+package com.tradearena.adminservice.repository;
+
+public interface CategoryFormRepository {
+
+}

@@ -6,6 +6,8 @@ import Login from '../pages/Login'
 import Register from '../pages/Register'
 import VerifyOtp from '../pages/VerifyOtp'
 
+import CategoryConfiguration from '../pages/admin/CategoryConfiguration'
+
 const router = createBrowserRouter([
     {
         path: '/login',
@@ -32,7 +34,7 @@ const router = createBrowserRouter([
         children: [
             { index: true, element: <Navigate to="/admin/dashboard" replace /> },
             { path: 'dashboard', element: <div>Dashboard</div> },
-            { path: 'category-configuration', element: <div>Category config</div> },
+            { path: 'category-configuration', element: <CategoryConfiguration /> },
         ],
     },
     {
