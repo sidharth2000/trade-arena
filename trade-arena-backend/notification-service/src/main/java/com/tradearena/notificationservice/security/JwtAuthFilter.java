@@ -14,12 +14,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.logging.Logger;
 
-/**
- * JwtAuthFilter — intercepts every request and validates the JWT token.
- * Reads the token from the Authorization header (Bearer <token>)
- * or from the ?token= query param (SSE fallback, since browser EventSource
- * cannot set custom headers).
- */
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
 

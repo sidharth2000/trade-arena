@@ -5,9 +5,6 @@ import com.tradearena.notificationservice.model.NotificationType;
 
 import java.time.LocalDateTime;
 
-/**
- * DTO returned to the frontend and to calling microservices.
- */
 public class NotificationResponse {
 
     private Long notificationId;
@@ -18,9 +15,6 @@ public class NotificationResponse {
     private LocalDateTime timestamp;
     private Long referenceId;
 
-    // -----------------------------------------------------------------------
-    // Constructors
-    // -----------------------------------------------------------------------
 
     public NotificationResponse() {}
 
@@ -36,7 +30,6 @@ public class NotificationResponse {
         this.referenceId = referenceId;
     }
 
-    /** Static factory — converts entity to response DTO. */
     public static NotificationResponse fromEntity(Notification n) {
         return new NotificationResponse(
                 n.getNotificationId(),
@@ -49,9 +42,6 @@ public class NotificationResponse {
         );
     }
 
-    // -----------------------------------------------------------------------
-    // Getters & Setters
-    // -----------------------------------------------------------------------
 
     public Long getNotificationId()                         { return notificationId; }
     public void setNotificationId(Long notificationId)      { this.notificationId = notificationId; }
@@ -74,9 +64,6 @@ public class NotificationResponse {
     public Long getReferenceId()                            { return referenceId; }
     public void setReferenceId(Long referenceId)            { this.referenceId = referenceId; }
 
-    // -----------------------------------------------------------------------
-    // Builder — replaces @Builder
-    // -----------------------------------------------------------------------
 
     public static Builder builder() { return new Builder(); }
 

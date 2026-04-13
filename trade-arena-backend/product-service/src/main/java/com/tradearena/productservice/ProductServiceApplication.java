@@ -6,10 +6,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
-/**
- * Product Service — manages product listings, search, and auction mode.
- * Registers with Eureka and uses OpenFeign to call Admin Service.
- */
+
 @SpringBootApplication
 @EnableDiscoveryClient
 @EnableFeignClients

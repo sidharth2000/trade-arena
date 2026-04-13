@@ -16,13 +16,10 @@ public class NotificationRequest {
     @Email(message = "userEmail must be a valid email address")
     private String userEmail;
 
-    /** Primary email recipients — used when htmlBody is provided */
     private List<String> to;
 
-    /** CC email recipients — optional */
     private List<String> cc;
 
-    /** Full HTML email body — if provided, used instead of auto-generated body */
     private String htmlBody;
 
     @NotBlank(message = "message is required")
@@ -33,24 +30,16 @@ public class NotificationRequest {
 
     private boolean sendEmail = false;
 
-    /** ID of the related entity (product/auction/order) for deep-linking. */
     private Long referenceId;
 
-    /** Title of the product — included in email body. */
     private String productTitle;
 
-    /** Bid amount in EUR — included in email body. */
     private Double bidAmount;
 
-    /** Auction ID — included in email body. */
     private Long auctionId;
 
-    /** Payment deadline — included in AUCTION_WIN / PAYMENT_REMINDER emails. */
     private LocalDateTime paymentDeadline;
 
-    // -----------------------------------------------------------------------
-    // Constructors
-    // -----------------------------------------------------------------------
 
     public NotificationRequest() {}
 
@@ -71,9 +60,6 @@ public class NotificationRequest {
         this.paymentDeadline = paymentDeadline;
     }
 
-    // -----------------------------------------------------------------------
-    // Getters & Setters
-    // -----------------------------------------------------------------------
 
     public Long getUserId()                     { return userId; }
     public void setUserId(Long userId)          { this.userId = userId; }
@@ -114,9 +100,6 @@ public class NotificationRequest {
     public LocalDateTime getPaymentDeadline()                       { return paymentDeadline; }
     public void setPaymentDeadline(LocalDateTime paymentDeadline)   { this.paymentDeadline = paymentDeadline; }
 
-    // -----------------------------------------------------------------------
-    // Builder
-    // -----------------------------------------------------------------------
 
     public static Builder builder() { return new Builder(); }
 
