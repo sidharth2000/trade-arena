@@ -1,0 +1,5 @@
+package com.tradearena.adminservice.service;
+
+public class CategoryServiceImpl {
+
+}

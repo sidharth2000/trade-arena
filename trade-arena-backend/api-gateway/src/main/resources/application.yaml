@@ -41,7 +41,7 @@ spring:
 
 app:
   jwt:
-    secret: your-256-bit-secret-key-same-as-auth-service
+    secret: TradeArena@SecretKey#2025$JwtAuth!HS256Ready
 
 eureka:
   client:

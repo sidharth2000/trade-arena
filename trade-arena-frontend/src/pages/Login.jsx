@@ -11,6 +11,7 @@ import {
 import { Eye, EyeOff } from 'lucide-react'
 import ShoppingParticles from '../components/ShoppingParticles'
 import styles from './Login.module.css'
+import { authApi } from '../api/AuthApi'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -24,22 +25,42 @@ export default function Login() {
     e.preventDefault()
     setError('')
     setLoading(true)
+
     try {
-      // TODO: replace with real API call
-      // const { data } = await api.post('/auth/login', { email, password })
-      // localStorage.setItem('token', data.token)
-      // navigate('/')
-      await new Promise(r => setTimeout(r, 800))
-      setError('Backend not connected yet')
+      const res = await authApi.login({ email, password })
+
+      if (res.payload) {
+        const { token, email: userEmail, role } = res.payload
+
+        const cleanToken = token.replace('Bearer ', '')
+
+        localStorage.setItem('token', cleanToken)
+        localStorage.setItem(
+          'user',
+          JSON.stringify({ email: userEmail, role })
+        )
+
+        if (role === 'ADMIN') {
+          navigate('/admin/home')
+        } else {
+          navigate('/')
+        }
+      } else {
+        setError(res.message || 'Invalid email or password')
+      }
+
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed')
+      setError(
+        err.response?.data?.message ||
+        err.message ||
+        'Login failed'
+      )
     } finally {
       setLoading(false)
     }
   }
 
   function handleGoogle() {
-    // TODO: wire up Google OAuth
     window.location.href = '/oauth2/authorization/google'
   }
 
@@ -126,7 +147,9 @@ export default function Login() {
 
         <p className={styles.switch}>
           No account?{' '}
-          <span onClick={() => navigate('/register')}>Register here</span>
+          <span onClick={() => navigate('/register')}>
+            Register here
+          </span>
         </p>
 
       </div>

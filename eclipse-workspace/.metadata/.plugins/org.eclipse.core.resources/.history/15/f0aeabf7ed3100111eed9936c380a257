@@ -1,0 +1,36 @@
+package com.tradearena.adminservice.service;
+
+import com.tradearena.adminservice.dto.ApiResponse;
+import com.tradearena.adminservice.dto.CategoryDto;
+import com.tradearena.adminservice.repository.CategoryRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@Service
+public class CategoryServiceImpl implements CategoryService {
+
+    @Autowired
+    private CategoryRepository categoryRepository;
+
+    @Override
+    public ResponseEntity<ApiResponse> getAllCategories() {
+        List<CategoryDto> categories = categoryRepository.findByParentCategoryIsNull()
+                .stream()
+                .map(cat -> new CategoryDto(
+                        cat.getCategoryId(),
+                        cat.getCategoryName(),
+                        cat.getCategoryIcon()
+                ))
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(new ApiResponse(
+                "Categories fetched successfully",
+                Map.of("categories", categories)
+        ));
+    }
+}
