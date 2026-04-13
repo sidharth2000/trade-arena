@@ -31,6 +31,10 @@ public class AuthFilter implements GlobalFilter, Ordered {
             "/notifications/stream"
     );
 
+    private static final List<String> ADMIN_PATHS = List.of(
+            "/admin"
+    );
+
     @Override
     public Mono<Void> filter(ServerWebExchange exchange,
                              org.springframework.cloud.gateway.filter.GatewayFilterChain chain) {
@@ -48,24 +52,30 @@ public class AuthFilter implements GlobalFilter, Ordered {
                 .getFirst(HttpHeaders.AUTHORIZATION);
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-            return exchange.getResponse().setComplete();
+            return unauthorized(exchange);
         }
 
         String token = authHeader.substring(7);
 
         if (!jwtUtil.isValid(token)) {
-            exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-            return exchange.getResponse().setComplete();
+            return unauthorized(exchange);
         }
 
         Claims claims = jwtUtil.extractClaims(token);
+        String role = claims.get("role", String.class);
+        System.out.println(role);
+        // Block non-admins from /admin/**
+        if (ADMIN_PATHS.stream().anyMatch(path::startsWith)) {
+            if (role == null || !role.equalsIgnoreCase("ADMIN")) {
+                return forbidden(exchange);
+            }
+        }
 
-        // Add headers for downstream services
+        // Forward with user headers
         var mutatedRequest = exchange.getRequest().mutate()
                 .header("X-User-Id", claims.getSubject())
                 .header("X-User-Email", claims.get("email", String.class))
-                .header("X-User-Role", claims.get("role", String.class))
+                .header("X-User-Role", role)
                 .build();
 
         return chain.filter(exchange.mutate().request(mutatedRequest).build());
@@ -74,5 +84,15 @@ public class AuthFilter implements GlobalFilter, Ordered {
     @Override
     public int getOrder() {
         return -1;
+    }
+
+    private Mono<Void> unauthorized(ServerWebExchange exchange) {
+        exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+        return exchange.getResponse().setComplete();
+    }
+
+    private Mono<Void> forbidden(ServerWebExchange exchange) {
+        exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
+        return exchange.getResponse().setComplete();
     }
 }

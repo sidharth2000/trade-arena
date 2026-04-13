@@ -1,0 +1,5 @@
+package com.tradearena.adminservice.dto;
+
+public class CategoryDto {
+
+}
