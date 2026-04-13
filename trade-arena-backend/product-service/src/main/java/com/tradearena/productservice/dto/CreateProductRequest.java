@@ -1,90 +1,73 @@
 package com.tradearena.productservice.dto;
 
-import jakarta.validation.constraints.Min;
+import com.tradearena.productservice.model.ProductCondition;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
-/**
- * DTO for creating a new product listing.
- * Received from the frontend via POST /api/products
- */
 public class CreateProductRequest {
 
     @NotBlank(message = "Title is required")
-    @Size(max = 200, message = "Title must be under 200 characters")
+    @Size(max = 150, message = "Title must be under 150 characters")
     private String title;
 
-    @NotBlank(message = "Description is required")
+    @Size(max = 300, message = "Description must be under 300 characters")
     private String description;
 
     @NotNull(message = "Price is required")
-    @Min(value = 0, message = "Price must be a positive value")
-    private Double price;
+    @DecimalMin(value = "0.01", message = "Price must be greater than 0")
+    private BigDecimal price;
 
     @NotNull(message = "Category ID is required")
-    private Integer categoryId;
+    private UUID categoryId;
 
-    /**
-     * Image URLs — uploaded by frontend to Cloudinary/ImgBB before submitting.
-     * Product Service only stores the returned URLs.
-     */
-    private List<String> imageUrls = new ArrayList<>();
+    @NotNull(message = "Sub-category ID is required")
+    private UUID subCategoryId;
 
-    /**
-     * Serialised JSON of dynamic form responses filled by the seller.
-     * Example: {"Brand":"Apple","Processor":"A16 Bionic","CPU GHz":"3.46"}
-     * Structure matches CategoryForm fields for the selected categoryId.
-     */
-    private String specificationValues;
+    @NotNull(message = "Condition is required")
+    private ProductCondition condition;
 
-    /** Whether to enable Quick Bid (auction) mode immediately on creation */
-    private Boolean auctionEnabled = false;
+    private Boolean quickBidEnabled = false;
+    private LocalDateTime quickBidEndTime;
+    private BigDecimal quickBidStartingPrice;
 
-    /** Required when auctionEnabled = true */
-    private LocalDateTime auctionEndTime;
+    private List<FormAnswer> productInformation = new ArrayList<>();
 
-    /** Required when auctionEnabled = true */
-    private Double minimumBidPrice;
+    public static class FormAnswer {
+        private Integer formId;
+        private String answer;
 
-    // -----------------------------------------------------------------------
-    // Constructors
-    // -----------------------------------------------------------------------
+        public Integer getFormId()              { return formId; }
+        public void setFormId(Integer formId)   { this.formId = formId; }
+        public String getAnswer()               { return answer; }
+        public void setAnswer(String answer)    { this.answer = answer; }
+    }
 
-    public CreateProductRequest() {}
-
-    // -----------------------------------------------------------------------
-    // Getters & Setters
-    // -----------------------------------------------------------------------
-
-    public String getTitle()                            { return title; }
-    public void setTitle(String title)                  { this.title = title; }
-
-    public String getDescription()                      { return description; }
-    public void setDescription(String description)      { this.description = description; }
-
-    public Double getPrice()                            { return price; }
-    public void setPrice(Double price)                  { this.price = price; }
-
-    public Integer getCategoryId()                      { return categoryId; }
-    public void setCategoryId(Integer categoryId)       { this.categoryId = categoryId; }
-
-    public List<String> getImageUrls()                  { return imageUrls; }
-    public void setImageUrls(List<String> imageUrls)    { this.imageUrls = imageUrls; }
-
-    public String getSpecificationValues()                              { return specificationValues; }
-    public void setSpecificationValues(String specificationValues)      { this.specificationValues = specificationValues; }
-
-    public Boolean getAuctionEnabled()                          { return auctionEnabled; }
-    public void setAuctionEnabled(Boolean auctionEnabled)       { this.auctionEnabled = auctionEnabled; }
-
-    public LocalDateTime getAuctionEndTime()                        { return auctionEndTime; }
-    public void setAuctionEndTime(LocalDateTime auctionEndTime)     { this.auctionEndTime = auctionEndTime; }
-
-    public Double getMinimumBidPrice()                          { return minimumBidPrice; }
-    public void setMinimumBidPrice(Double minimumBidPrice)      { this.minimumBidPrice = minimumBidPrice; }
+    public String getTitle()                                { return title; }
+    public void setTitle(String title)                      { this.title = title; }
+    public String getDescription()                          { return description; }
+    public void setDescription(String description)          { this.description = description; }
+    public BigDecimal getPrice()                            { return price; }
+    public void setPrice(BigDecimal price)                  { this.price = price; }
+    public UUID getCategoryId()                             { return categoryId; }
+    public void setCategoryId(UUID categoryId)              { this.categoryId = categoryId; }
+    public UUID getSubCategoryId()                          { return subCategoryId; }
+    public void setSubCategoryId(UUID subCategoryId)        { this.subCategoryId = subCategoryId; }
+    public ProductCondition getCondition()                  { return condition; }
+    public void setCondition(ProductCondition condition)    { this.condition = condition; }
+    public Boolean getQuickBidEnabled()                     { return quickBidEnabled; }
+    public void setQuickBidEnabled(Boolean q)               { this.quickBidEnabled = q; }
+    public LocalDateTime getQuickBidEndTime()               { return quickBidEndTime; }
+    public void setQuickBidEndTime(LocalDateTime t)         { this.quickBidEndTime = t; }
+    public BigDecimal getQuickBidStartingPrice()            { return quickBidStartingPrice; }
+    public void setQuickBidStartingPrice(BigDecimal p)      { this.quickBidStartingPrice = p; }
+    public List<FormAnswer> getProductInformation()         { return productInformation; }
+    public void setProductInformation(List<FormAnswer> pi)  { this.productInformation = pi; }
 }
