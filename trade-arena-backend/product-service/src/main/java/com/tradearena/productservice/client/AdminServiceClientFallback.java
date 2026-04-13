@@ -6,11 +6,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Fallback for AdminServiceClient.
- * Returns safe empty responses when Admin Service is unavailable
- * so Product Service can still start and handle other requests.
- */
 @Component
 public class AdminServiceClientFallback implements AdminServiceClient {
 

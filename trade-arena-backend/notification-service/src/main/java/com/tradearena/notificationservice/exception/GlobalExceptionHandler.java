@@ -12,19 +12,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
-/**
- * GlobalExceptionHandler — catches validation and runtime errors and returns
- * clean JSON error responses instead of Spring's default HTML error page.
- */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     private static final Logger log = Logger.getLogger(GlobalExceptionHandler.class.getName());
 
-    /**
-     * Handles @Valid / @Validated bean validation failures.
-     * Returns HTTP 400 with a map of field -> error message.
-     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationErrors(MethodArgumentNotValidException ex) {
         Map<String, String> fieldErrors = new HashMap<>();
@@ -42,9 +34,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(body);
     }
 
-    /**
-     * Handles NotificationService.markAsRead() when ID is unknown.
-     */
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex) {
         Map<String, Object> body = new HashMap<>();
@@ -56,9 +45,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
     }
 
-    /**
-     * Catch-all for unexpected runtime exceptions.
-     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
         Map<String, Object> body = new HashMap<>();
