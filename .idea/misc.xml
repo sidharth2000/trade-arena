@@ -1,4 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ExternalStorageConfigurationManager" enabled="true" />
+  <component name="MavenProjectsManager">
+    <option name="originalFiles">
+      <list>
+        <option value="$PROJECT_DIR$/trade-arena-backend/admin-service/pom.xml" />
+        <option value="$PROJECT_DIR$/trade-arena-backend/api-gateway/pom.xml" />
+        <option value="$PROJECT_DIR$/trade-arena-backend/auth-service/pom.xml" />
+        <option value="$PROJECT_DIR$/trade-arena-backend/bidding-camunda-service/pom.xml" />
+        <option value="$PROJECT_DIR$/trade-arena-backend/chat-service/pom.xml" />
+        <option value="$PROJECT_DIR$/trade-arena-backend/discovery-service/pom.xml" />
+        <option value="$PROJECT_DIR$/trade-arena-backend/notification-service/pom.xml" />
+        <option value="$PROJECT_DIR$/trade-arena-backend/product-service/pom.xml" />
+      </list>
+    </option>
+  </component>
+  <component name="ProjectRootManager" version="2" project-jdk-name="21" project-jdk-type="JavaSDK" />
 </project>
