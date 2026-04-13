@@ -1,0 +1,10 @@
+.catCard {
+  border-radius: 8px !important;
+  transition: box-shadow 0.2s, transform 0.15s;
+  cursor: pointer;
+}
+
+.catCard:hover {
+  box-shadow: 0 4px 20px rgba(40, 116, 240, 0.18) !important;
+  transform: translateY(-2px);
+}

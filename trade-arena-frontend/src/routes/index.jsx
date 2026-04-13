@@ -5,6 +5,9 @@ import AdminLayout from '../layouts/AdminLayout'
 import Login from '../pages/Login'
 import Register from '../pages/Register'
 import VerifyOtp from '../pages/VerifyOtp'
+import SellProduct from '../pages/SellProduct'
+import ChatPage from '../pages/ChatPage'
+import ProductsPage from '../pages/ProductsPage'
 
 import CategoryConfiguration from '../pages/admin/CategoryConfiguration'
 
@@ -15,17 +18,21 @@ const router = createBrowserRouter([
     },
     {
         path: '/register',
-        element: <Register/>,
+        element: <Register />,
     },
     {
         path: '/verify-user',
-        element: <VerifyOtp/>,
+        element: <VerifyOtp />,
     },
     {
         path: '/',
         element: <PublicLayout />,
         children: [
-            { index: true, element: <div>Home page</div> },
+            { index: true, element: <ProductsPage /> },
+            { path: 'products', element: <ProductsPage /> },
+            { path: 'products/:id', element: <div>Product Detail — coming soon</div> },
+            { path: 'sell', element: <SellProduct /> },
+            { path: 'chat', element: <ChatPage /> },
         ],
     },
     {
@@ -39,7 +46,7 @@ const router = createBrowserRouter([
     },
     {
         path: '*',
-        element: <Navigate to="/login" replace />,
+        element: <Navigate to="/" replace />,
     },
 ])
 
