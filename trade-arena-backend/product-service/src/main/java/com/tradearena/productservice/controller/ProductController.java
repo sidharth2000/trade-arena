@@ -1,9 +1,11 @@
 package com.tradearena.productservice.controller;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -14,8 +16,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tradearena.productservice.dto.CreateProductRequest;
 import com.tradearena.productservice.dto.PagedResponse;
 import com.tradearena.productservice.dto.ProductDetailResponse;
@@ -31,31 +36,33 @@ import jakarta.validation.Valid;
 public class ProductController {
 
     private final ProductService service;
+    private final ObjectMapper objectMapper;
 
-    public ProductController(ProductService service) {
+    public ProductController(ProductService service, ObjectMapper objectMapper) {
         this.service = service;
+        this.objectMapper = objectMapper;
     }
-    
-    
-    //----------------------- sell page APIs
-    
+
+    // ── Sell page APIs ──────────────────────────────────────────────────────
+
     @GetMapping("/categories")
     public ResponseEntity<Map<String, Object>> getCategories() {
         return ResponseEntity.ok(service.getCategoriesFromAdmin());
     }
-    
+
     @GetMapping("/categories/{categoryId}/subcategories")
     public ResponseEntity<Map<String, Object>> getSubCategories(
             @PathVariable Integer categoryId) {
         return ResponseEntity.ok(service.getSubCategories(categoryId));
     }
-    
+
     @GetMapping("/subcategories/{subCategoryId}/questions")
     public ResponseEntity<Map<String, Object>> getQuestions(
             @PathVariable Integer subCategoryId) {
         return ResponseEntity.ok(service.getQuestions(subCategoryId));
     }
-    
+
+    // ── Product listing APIs ────────────────────────────────────────────────
 
     @GetMapping
     public ResponseEntity<PagedResponse<ProductListingSummary>> getProducts(
@@ -74,12 +81,39 @@ public class ProductController {
         return ResponseEntity.ok(service.getProductById(id));
     }
 
-    @PostMapping
+    /**
+     * Create product — accepts multipart/form-data.
+     *
+     * Parts:
+     *   - "data"   (required) : JSON string of CreateProductRequest
+     *   - "images" (optional) : one or more image files
+     *
+     * Example curl:
+     *   curl -X POST http://localhost:8083/api/products \
+     *     -H "X-User-Id: 1" \
+     *     -F 'data={"title":"iPhone","price":50000,...}' \
+     *     -F 'images=@/path/to/photo.jpg'
+     */
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ProductDetailResponse> createProduct(
+            @RequestPart("data") String requestJson,
+            @RequestPart(value = "images", required = false) List<MultipartFile> images,
+            @RequestHeader("X-User-Id") Long sellerId) throws Exception {
+
+        CreateProductRequest request = objectMapper.readValue(requestJson, CreateProductRequest.class);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(service.createProduct(request, sellerId, images));
+    }
+
+    /**
+     * Fallback: plain JSON without images (backward compat / Postman testing)
+     */
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ProductDetailResponse> createProductJson(
             @Valid @RequestBody CreateProductRequest request,
             @RequestHeader("X-User-Id") Long sellerId) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(service.createProduct(request, sellerId));
+                .body(service.createProduct(request, sellerId, null));
     }
 
     @PatchMapping("/id/{id}/remove")
@@ -100,9 +134,4 @@ public class ProductController {
         service.markAsAuctionSold(id);
         return ResponseEntity.noContent().build();
     }
-    
-    
-    
-    
-
 }

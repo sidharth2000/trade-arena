@@ -54,7 +54,9 @@ function ProductCard({ product, onClick }) {
   const navBg = theme.palette.custom.nav
   const isAuction = product.status === 'AUCTION'
   const price = product.quickBidStartingPrice ?? product.price
-  const imgSrc = resolveImage(product.images)
+  const imgSrc = product.primaryImageData        // ← new
+    ? `data:${product.primaryImageMimeType ?? 'image/jpeg'};base64,${product.primaryImageData}`
+    : resolveImage(product.images)
 
   return (
     <Card
