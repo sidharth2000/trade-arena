@@ -7,6 +7,7 @@ import { useThemeToggle } from '../context/ThemeContext'
 import { notificationApi } from '../api/NotificationApi'
 import { useAuth } from '../hooks/useAuth'
 import styles from './Navbar.module.css'
+import { LogOut } from 'lucide-react'
 
 const TYPE_COLORS = {
   OUTBID: '#f59e0b',
@@ -88,6 +89,11 @@ export default function Navbar() {
     }
   }
 
+  const handleLogout = () => {
+    localStorage.clear()
+    navigate('/login')
+  }
+
   return (
     <>
       <AppBar position="sticky" className={styles.nav}
@@ -139,6 +145,13 @@ export default function Navbar() {
                   onClick={() => navigate('/sell')}
                 >
                   Sell
+                </Button>
+                <Button
+                  className={styles.loginBtn}
+                  onClick={handleLogout}
+                  startIcon={<LogOut size={16} />}
+                >
+                  Logout
                 </Button>
               </>
             ) : (

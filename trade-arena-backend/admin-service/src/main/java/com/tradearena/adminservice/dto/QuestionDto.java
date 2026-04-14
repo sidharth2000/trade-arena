@@ -1,9 +1,12 @@
 package com.tradearena.adminservice.dto;
 
-import com.tradearena.adminservice.models.ResponseType;
 import java.util.List;
 
+import com.tradearena.adminservice.models.ResponseType;
+
 public class QuestionDto {
+	private int questionId;
+
 
 	private String question;
 	private ResponseType responseType;
@@ -49,5 +52,13 @@ public class QuestionDto {
 
 	public void setPlaceholder(String placeholder) {
 		this.placeholder = placeholder;
+	}
+	
+	public int getQuestionId() {
+		return questionId;
+	}
+
+	public void setQuestionId(int questionId) {
+		this.questionId = questionId;
 	}
 }

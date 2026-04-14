@@ -40,10 +40,10 @@ public class Product {
     private Long sellerId;
 
     @Column(nullable = false)
-    private UUID categoryId;
+    private Integer categoryId;
 
     @Column(nullable = false)
-    private UUID subCategoryId;
+    private Integer subCategoryId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -103,10 +103,10 @@ public class Product {
     public void setPrice(BigDecimal price)                  { this.price = price; }
     public Long getSellerId()                               { return sellerId; }
     public void setSellerId(Long sellerId)                  { this.sellerId = sellerId; }
-    public UUID getCategoryId()                             { return categoryId; }
-    public void setCategoryId(UUID categoryId)              { this.categoryId = categoryId; }
-    public UUID getSubCategoryId()                          { return subCategoryId; }
-    public void setSubCategoryId(UUID subCategoryId)        { this.subCategoryId = subCategoryId; }
+    public Integer getCategoryId()                             { return categoryId; }
+    public void setCategoryId(Integer categoryId)              { this.categoryId = categoryId; }
+    public Integer getSubCategoryId()                          { return subCategoryId; }
+    public void setSubCategoryId(Integer subCategoryId)        { this.subCategoryId = subCategoryId; }
     public ProductStatus getStatus()                        { return status; }
     public void setStatus(ProductStatus status)             { this.status = status; }
     public ProductCondition getCondition()                  { return condition; }

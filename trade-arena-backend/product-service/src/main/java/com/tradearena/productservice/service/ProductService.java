@@ -1,22 +1,35 @@
 package com.tradearena.productservice.service;
 
-import com.tradearena.productservice.dto.*;
-import com.tradearena.productservice.exception.ProductNotFoundException;
-import com.tradearena.productservice.exception.UnauthorisedActionException;
-import com.tradearena.productservice.model.*;
-import com.tradearena.productservice.repository.ProductRepository;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.UUID;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.UUID;
+import com.tradearena.productservice.client.AdminServiceClient;
+import com.tradearena.productservice.dto.CreateProductRequest;
+import com.tradearena.productservice.dto.PagedResponse;
+import com.tradearena.productservice.dto.ProductDetailResponse;
+import com.tradearena.productservice.dto.ProductListingSummary;
+import com.tradearena.productservice.dto.RemoveProductResponse;
+import com.tradearena.productservice.exception.ProductNotFoundException;
+import com.tradearena.productservice.exception.UnauthorisedActionException;
+import com.tradearena.productservice.model.Product;
+import com.tradearena.productservice.model.ProductInformation;
+import com.tradearena.productservice.model.ProductStatus;
+import com.tradearena.productservice.repository.ProductRepository;
 
 @Service
 public class ProductService {
 
+	@Autowired
+	AdminServiceClient adminClient;
+	
     private final ProductRepository repository;
 
     public ProductService(ProductRepository repository) {
@@ -43,7 +56,7 @@ public class ProductService {
             validateQuickBidFields(request.getQuickBidEndTime(),
                     request.getQuickBidStartingPrice());
         }
-
+        System.out.println("arrives");
         Product product = new Product();
         product.setSellerId(sellerId);
         product.setTitle(request.getTitle());
@@ -128,5 +141,20 @@ public class ProductService {
             throw new IllegalArgumentException(
                     "quickBidEndTime must be at least 5 minutes in the future");
         }
+    }
+    
+    
+    // APIS for sell page
+    
+    public Map<String, Object> getCategoriesFromAdmin() {
+        return adminClient.getAllCategories();
+    }
+    
+    public Map<String, Object> getSubCategories(Integer categoryId) {
+        return adminClient.getSubCategories(categoryId);
+    }
+    
+    public Map<String, Object> getQuestions(Integer subCategoryId) {
+        return adminClient.getQuestions(subCategoryId);
     }
 }

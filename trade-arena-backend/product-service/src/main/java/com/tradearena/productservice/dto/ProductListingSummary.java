@@ -14,8 +14,8 @@ public class ProductListingSummary {
     private String title;
     private String description;
     private BigDecimal price;
-    private UUID categoryId;
-    private UUID subCategoryId;
+    private Integer categoryId;
+    private Integer subCategoryId;
     private Long sellerId;
     private ProductStatus status;
     private ProductCondition condition;
@@ -49,8 +49,8 @@ public class ProductListingSummary {
     public String getTitle()            { return title; }
     public String getDescription()      { return description; }
     public BigDecimal getPrice()        { return price; }
-    public UUID getCategoryId()         { return categoryId; }
-    public UUID getSubCategoryId()      { return subCategoryId; }
+    public Integer getCategoryId()         { return categoryId; }
+    public Integer getSubCategoryId()      { return subCategoryId; }
     public Long getSellerId()           { return sellerId; }
     public ProductStatus getStatus()    { return status; }
     public ProductCondition getCondition() { return condition; }

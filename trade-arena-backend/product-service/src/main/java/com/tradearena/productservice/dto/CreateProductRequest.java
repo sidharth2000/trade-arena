@@ -26,10 +26,10 @@ public class CreateProductRequest {
     private BigDecimal price;
 
     @NotNull(message = "Category ID is required")
-    private UUID categoryId;
+    private Integer categoryId;
 
     @NotNull(message = "Sub-category ID is required")
-    private UUID subCategoryId;
+    private Integer subCategoryId;
 
     @NotNull(message = "Condition is required")
     private ProductCondition condition;
@@ -56,10 +56,10 @@ public class CreateProductRequest {
     public void setDescription(String description)          { this.description = description; }
     public BigDecimal getPrice()                            { return price; }
     public void setPrice(BigDecimal price)                  { this.price = price; }
-    public UUID getCategoryId()                             { return categoryId; }
-    public void setCategoryId(UUID categoryId)              { this.categoryId = categoryId; }
-    public UUID getSubCategoryId()                          { return subCategoryId; }
-    public void setSubCategoryId(UUID subCategoryId)        { this.subCategoryId = subCategoryId; }
+    public Integer getCategoryId()                             { return categoryId; }
+    public void setCategoryId(Integer categoryId)              { this.categoryId = categoryId; }
+    public Integer getSubCategoryId()                          { return subCategoryId; }
+    public void setSubCategoryId(Integer subCategoryId)        { this.subCategoryId = subCategoryId; }
     public ProductCondition getCondition()                  { return condition; }
     public void setCondition(ProductCondition condition)    { this.condition = condition; }
     public Boolean getQuickBidEnabled()                     { return quickBidEnabled; }

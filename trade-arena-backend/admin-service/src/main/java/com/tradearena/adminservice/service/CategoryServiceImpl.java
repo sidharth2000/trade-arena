@@ -192,6 +192,7 @@ public class CategoryServiceImpl implements CategoryService {
                     dto.setResponseType(form.getResponseType());
                     dto.setRequired(form.getRequired());
                     dto.setPlaceholder(form.getPlaceholder());
+                    dto.setQuestionId(form.getFormId());
 
                     // Deserialize options JSON string back to List
                     try {

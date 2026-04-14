@@ -28,4 +28,20 @@ export const productApi = {
     })
     return res.data
   },
+
+
+  getAllCategories: async () => {
+        const res = await client.get('/api/products/categories')
+        return res.data
+    },
+
+    getSubCategories: async (parentCategoryId) => {
+        const res = await client.get(`/api/products/categories/${parentCategoryId}/subcategories`)
+        return res.data
+    },
+
+    getQuestionsBySubCategory: async (subCategoryId) => {
+        const res = await client.get(`/api/products/subcategories/${subCategoryId}/questions`)
+        return res.data
+    }
 }

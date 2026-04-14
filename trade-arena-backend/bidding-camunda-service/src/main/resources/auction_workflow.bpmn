@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_0xiwo6y" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.43.1" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:process id="auction_flow" name="Auction Work Flow" isExecutable="true" camunda:historyTimeToLive="P30D">
+    <bpmn:startEvent id="StartEvent_1" name="Start">
+      <bpmn:outgoing>Flow_0mgknbi</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_0mgknbi" sourceRef="StartEvent_1" targetRef="Activity_1x4w2v8" />
+    <bpmn:intermediateCatchEvent id="Event_0agpuzp" name="Auction Ends">
+      <bpmn:incoming>Flow_0gsgwtt</bpmn:incoming>
+      <bpmn:outgoing>Flow_1mu55zd</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_04fmk0e">
+        <bpmn:timeDate xsi:type="bpmn:tFormalExpression">${auction_end_time}</bpmn:timeDate>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sequenceFlow id="Flow_1mu55zd" sourceRef="Event_0agpuzp" targetRef="Activity_16xgrw4" />
+    <bpmn:endEvent id="Event_08iht8w" name="Stop">
+      <bpmn:incoming>Flow_0ja8in4</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="Activity_16xgrw4" name="Check If Bids?" camunda:class="com.tradearena.delegate.CheckBid">
+      <bpmn:incoming>Flow_1mu55zd</bpmn:incoming>
+      <bpmn:outgoing>Flow_04qciqh</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gateway_0w314cg" name="No Bids?">
+      <bpmn:incoming>Flow_04qciqh</bpmn:incoming>
+      <bpmn:outgoing>Flow_1pkmavp</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_04qciqh" sourceRef="Activity_16xgrw4" targetRef="Gateway_0w314cg" />
+    <bpmn:sequenceFlow id="Flow_1pkmavp" sourceRef="Gateway_0w314cg" targetRef="Activity_00gj5zh" />
+    <bpmn:serviceTask id="Activity_00gj5zh" name="Product Moves To Active Again" camunda:class="com.tradearena.delegate.ProductToActive">
+      <bpmn:incoming>Flow_1pkmavp</bpmn:incoming>
+      <bpmn:outgoing>Flow_0ja8in4</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_0ja8in4" sourceRef="Activity_00gj5zh" targetRef="Event_08iht8w" />
+    <bpmn:sequenceFlow id="Flow_0gsgwtt" sourceRef="Activity_1x4w2v8" targetRef="Event_0agpuzp" />
+    <bpmn:serviceTask id="Activity_1x4w2v8" name="Move Product To Auction" camunda:class="com.tradearena.delegate.ProductToAuction">
+      <bpmn:incoming>Flow_0mgknbi</bpmn:incoming>
+      <bpmn:outgoing>Flow_0gsgwtt</bpmn:outgoing>
+    </bpmn:serviceTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="auction_flow">
+      <bpmndi:BPMNShape id="Activity_03b2ero_di" bpmnElement="Activity_16xgrw4">
+        <dc:Bounds x="530" y="80" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_0w314cg_di" bpmnElement="Gateway_0w314cg" isMarkerVisible="true">
+        <dc:Bounds x="685" y="95" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="687" y="71" width="45" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_08iht8w_di" bpmnElement="Event_08iht8w">
+        <dc:Bounds x="1002" y="102" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1009" y="145" width="23" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1">
+        <dc:Bounds x="152" y="102" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="159" y="145" width="25" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_06aflri_di" bpmnElement="Activity_1x4w2v8">
+        <dc:Bounds x="260" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0agpuzp_di" bpmnElement="Event_0agpuzp">
+        <dc:Bounds x="422" y="102" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="408" y="145" width="65" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_1nnfo9d" bpmnElement="Activity_00gj5zh">
+        <dc:Bounds x="810" y="80" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_0gsgwtt_di" bpmnElement="Flow_0gsgwtt">
+        <di:waypoint x="360" y="120" />
+        <di:waypoint x="422" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1mu55zd_di" bpmnElement="Flow_1mu55zd">
+        <di:waypoint x="458" y="120" />
+        <di:waypoint x="530" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_04qciqh_di" bpmnElement="Flow_04qciqh">
+        <di:waypoint x="630" y="120" />
+        <di:waypoint x="685" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1pkmavp_di" bpmnElement="Flow_1pkmavp">
+        <di:waypoint x="735" y="120" />
+        <di:waypoint x="810" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0ja8in4_di" bpmnElement="Flow_0ja8in4">
+        <di:waypoint x="910" y="120" />
+        <di:waypoint x="1002" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0mgknbi_di" bpmnElement="Flow_0mgknbi">
+        <di:waypoint x="188" y="120" />
+        <di:waypoint x="260" y="120" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
