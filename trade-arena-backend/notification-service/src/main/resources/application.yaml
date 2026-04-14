@@ -5,24 +5,15 @@ spring:
   application:
     name: notification-service
 
-  # ========================================
-  # Active profile: override per environment
-  # dev  → uses application-dev.yaml
-  # prod → uses application-prod.yaml
-  # ========================================
   profiles:
     active: dev
 
-  # ========================================
-  # PostgreSQL - Dedicated notification_db
-  # ========================================
   datasource:
-    url: jdbc:postgresql://localhost:5432/notification_db
+    url: jdbc:postgresql://localhost:5432/tradearena_notification
     username: postgres
     password: root
     driver-class-name: org.postgresql.Driver
 
-  # JPA / Hibernate
   jpa:
     hibernate:
       ddl-auto: update
@@ -32,15 +23,11 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
-  # ========================================
-  # SMTP Email Configuration (Gmail)
-  # Credentials overridden per profile below
-  # ========================================
   mail:
     host: smtp.gmail.com
     port: 587
-    username: your_email@gmail.com
-    password: your_app_password
+    username: krithikaaie21@gmail.com
+    password: ztftppfuxvqiuvon
     properties:
       mail:
         smtp:
@@ -52,9 +39,6 @@ spring:
           timeout: 3000
           writetimeout: 5000
 
-# ========================================
-# Eureka Client - Service Discovery
-# ========================================
 eureka:
   client:
     service-url:
@@ -64,24 +48,16 @@ eureka:
   instance:
     prefer-ip-address: true
 
-# ========================================
-# App Custom Properties
-# NOTE: key is trade-arena.mail.from
-# (matches @Value("${trade-arena.mail.from}") in EmailService)
-# ========================================
 trade-arena:
   mail:
-    from: no-reply@tradearena.com
+    from: "Trade Arena <krithikaaie21@gmail.com>"
   jwt:
-    secret: your_jwt_secret_key_must_be_at_least_256_bits_long_replace_this
+    secret: TradeArena@SecretKey#2025$JwtAuth!HS256Ready
 
 app:
   sse:
     timeout: 300000
 
-# ========================================
-# Logging
-# ========================================
 logging:
   level:
     com.tradearena.notificationservice: DEBUG

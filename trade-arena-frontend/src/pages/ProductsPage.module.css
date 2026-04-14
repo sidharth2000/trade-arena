@@ -1,0 +1,19 @@
+.productCard {
+  border-radius: 8px !important;
+  transition: box-shadow 0.2s, transform 0.15s;
+  cursor: pointer;
+  height: 100%;
+}
+
+.productCard:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12) !important;
+  transform: translateY(-2px);
+}
+
+.auctionCard {
+  box-shadow: 0 2px 12px rgba(40, 116, 240, 0.18) !important;
+}
+
+.auctionCard:hover {
+  box-shadow: 0 6px 24px rgba(40, 116, 240, 0.28) !important;
+}

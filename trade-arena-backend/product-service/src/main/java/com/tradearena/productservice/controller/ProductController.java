@@ -1,22 +1,31 @@
 package com.tradearena.productservice.controller;
 
-import com.tradearena.productservice.dto.*;
-import com.tradearena.productservice.service.ProductService;
-import jakarta.validation.Valid;
+import java.util.Map;
+import java.util.UUID;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import com.tradearena.productservice.dto.CreateProductRequest;
+import com.tradearena.productservice.dto.PagedResponse;
+import com.tradearena.productservice.dto.ProductDetailResponse;
+import com.tradearena.productservice.dto.ProductListingSummary;
+import com.tradearena.productservice.dto.RemoveProductResponse;
+import com.tradearena.productservice.model.ProductStatus;
+import com.tradearena.productservice.service.ProductService;
 
-/**
- * REST controller for Product Service.
- *
- * Security note:
- * All requests arrive via the API Gateway which validates the JWT and
- * forwards X-User-Id, X-User-Email, X-User-Role as headers.
- * This service reads sellerId from X-User-Id — no local JWT validation needed.
- */
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/products")
 public class ProductController {
@@ -26,150 +35,74 @@ public class ProductController {
     public ProductController(ProductService service) {
         this.service = service;
     }
+    
+    
+    //----------------------- sell page APIs
+    
+    @GetMapping("/categories")
+    public ResponseEntity<Map<String, Object>> getCategories() {
+        return ResponseEntity.ok(service.getCategoriesFromAdmin());
+    }
+    
+    @GetMapping("/categories/{categoryId}/subcategories")
+    public ResponseEntity<Map<String, Object>> getSubCategories(
+            @PathVariable Integer categoryId) {
+        return ResponseEntity.ok(service.getSubCategories(categoryId));
+    }
+    
+    @GetMapping("/subcategories/{subCategoryId}/questions")
+    public ResponseEntity<Map<String, Object>> getQuestions(
+            @PathVariable Integer subCategoryId) {
+        return ResponseEntity.ok(service.getQuestions(subCategoryId));
+    }
+    
 
-    // -----------------------------------------------------------------------
-    // Seller endpoints
-    // -----------------------------------------------------------------------
+    @GetMapping
+    public ResponseEntity<PagedResponse<ProductListingSummary>> getProducts(
+            @RequestParam(required = false) UUID categoryId,
+            @RequestParam(required = false) UUID subCategoryId,
+            @RequestParam(required = false) Long sellerId,
+            @RequestParam(required = false) ProductStatus status,
+            @RequestParam(defaultValue = "0")  int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(
+                service.getProducts(categoryId, subCategoryId, sellerId, status, page, size));
+    }
 
-    /**
-     * Create a new product listing.
-     * Requires X-User-Id header (set by API Gateway from JWT).
-     */
+    @GetMapping("/id/{id}")
+    public ResponseEntity<ProductDetailResponse> getProduct(@PathVariable UUID id) {
+        return ResponseEntity.ok(service.getProductById(id));
+    }
+
     @PostMapping
-    public ResponseEntity<ProductResponse> createProduct(
+    public ResponseEntity<ProductDetailResponse> createProduct(
             @Valid @RequestBody CreateProductRequest request,
-            @RequestHeader("X-User-Id") Integer sellerId) {
+            @RequestHeader("X-User-Id") Long sellerId) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(service.createProduct(request, sellerId));
     }
 
-    /**
-     * Update an existing listing.
-     * Only the seller who created it can update it.
-     */
-    @PutMapping("/{productId}")
-    public ResponseEntity<ProductResponse> updateProduct(
-            @PathVariable Long productId,
-            @Valid @RequestBody UpdateProductRequest request,
-            @RequestHeader("X-User-Id") Integer sellerId) {
-        return ResponseEntity.ok(service.updateProduct(productId, request, sellerId));
+    @PatchMapping("/id/{id}/remove")
+    public ResponseEntity<RemoveProductResponse> removeProduct(
+            @PathVariable UUID id,
+            @RequestHeader("X-User-Id") Long sellerId) {
+        return ResponseEntity.ok(service.removeProduct(id, sellerId));
     }
 
-    /**
-     * Enable Quick Bid (auction) mode on an existing listing.
-     */
-    @PutMapping("/{productId}/auction")
-    public ResponseEntity<ProductResponse> enableAuction(
-            @PathVariable Long productId,
-            @Valid @RequestBody EnableAuctionRequest request,
-            @RequestHeader("X-User-Id") Integer sellerId) {
-        return ResponseEntity.ok(service.enableAuction(productId, request, sellerId));
-    }
-
-    /**
-     * Deactivate (soft-delete) a listing.
-     */
-    @DeleteMapping("/{productId}")
-    public ResponseEntity<Void> deactivateProduct(
-            @PathVariable Long productId,
-            @RequestHeader("X-User-Id") Integer sellerId) {
-        service.deactivateProduct(productId, sellerId);
+    @PutMapping("/id/{id}/mark-sold")
+    public ResponseEntity<Void> markAsSold(@PathVariable UUID id) {
+        service.markAsSold(id);
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * Get all listings created by the authenticated seller.
-     */
-    @GetMapping("/my-listings")
-    public ResponseEntity<List<ProductResponse>> getMyListings(
-            @RequestHeader("X-User-Id") Integer sellerId) {
-        return ResponseEntity.ok(service.getProductsBySeller(sellerId));
+    @PutMapping("/id/{id}/mark-auction-sold")
+    public ResponseEntity<Void> markAsAuctionSold(@PathVariable UUID id) {
+        service.markAsAuctionSold(id);
+        return ResponseEntity.noContent().build();
     }
+    
+    
+    
+    
 
-    // -----------------------------------------------------------------------
-    // Buyer / public browsing endpoints
-    // -----------------------------------------------------------------------
-
-    /**
-     * Get a single product by ID.
-     */
-    @GetMapping("/{productId}")
-    public ResponseEntity<ProductResponse> getProduct(@PathVariable Long productId) {
-        return ResponseEntity.ok(service.getProductById(productId));
-    }
-
-    /**
-     * Browse all active listings — paginated.
-     */
-    @GetMapping
-    public ResponseEntity<PagedResponse<ProductResponse>> getActiveListings(
-            @RequestParam(defaultValue = "0")  int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(service.getActiveListings(page, size));
-    }
-
-    /**
-     * Browse listings by category — paginated.
-     */
-    @GetMapping("/category/{categoryId}")
-    public ResponseEntity<PagedResponse<ProductResponse>> getByCategory(
-            @PathVariable Integer categoryId,
-            @RequestParam(defaultValue = "0")  int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(service.getListingsByCategory(categoryId, page, size));
-    }
-
-    /**
-     * Search listings by keyword, optionally filtered by category.
-     * GET /api/products/search?keyword=iphone
-     * GET /api/products/search?keyword=iphone&categoryId=3
-     */
-    @GetMapping("/search")
-    public ResponseEntity<PagedResponse<ProductResponse>> searchProducts(
-            @RequestParam String keyword,
-            @RequestParam(required = false) Integer categoryId,
-            @RequestParam(defaultValue = "0")  int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(service.searchProducts(keyword, categoryId, page, size));
-    }
-
-    /**
-     * Browse all active auction listings — paginated.
-     */
-    @GetMapping("/auctions")
-    public ResponseEntity<PagedResponse<ProductResponse>> getAuctionListings(
-            @RequestParam(defaultValue = "0")  int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(service.getAuctionListings(page, size));
-    }
-
-    /**
-     * Get dynamic form fields for a category from Admin Service.
-     * Frontend calls this when a seller selects a category to get
-     * the list of required specification fields to display.
-     */
-    @GetMapping("/category/{categoryId}/form")
-    public ResponseEntity<Object> getCategoryForm(@PathVariable Integer categoryId) {
-        return ResponseEntity.ok(service.getCategoryForm(categoryId));
-    }
-
-    // -----------------------------------------------------------------------
-    // Internal endpoints — called by other microservices
-    // -----------------------------------------------------------------------
-
-    /**
-     * Mark a product as SOLD — called by Order/Bidding service after payment.
-     */
-    @PutMapping("/{productId}/mark-sold")
-    public ResponseEntity<ProductResponse> markAsSold(@PathVariable Long productId) {
-        return ResponseEntity.ok(service.markAsSold(productId));
-    }
-
-    /**
-     * Mark a product as AUCTION_SOLD — called by Camunda after auction payment confirmed.
-     */
-    @PutMapping("/{productId}/mark-auction-sold")
-    public ResponseEntity<ProductResponse> markAsAuctionSold(@PathVariable Long productId) {
-        return ResponseEntity.ok(service.markAsAuctionSold(productId));
-    }
 }

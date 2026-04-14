@@ -1,0 +1,224 @@
+package com.tradearena.adminservice.service;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tradearena.adminservice.dto.ApiResponse;
+import com.tradearena.adminservice.dto.CategoryDto;
+import com.tradearena.adminservice.dto.CategoryRequestDto;
+import com.tradearena.adminservice.dto.QuestionDto;
+import com.tradearena.adminservice.models.Category;
+import com.tradearena.adminservice.models.CategoryForm;
+import com.tradearena.adminservice.repository.CategoryFormRepository;
+import com.tradearena.adminservice.repository.CategoryRepository;
+
+import jakarta.transaction.Transactional;
+
+@Service
+public class CategoryServiceImpl implements CategoryService {
+
+    @Autowired
+    private CategoryRepository categoryRepository;
+    
+    @Autowired
+    private CategoryFormRepository categoryFormRepository;
+
+    @Override
+    public ResponseEntity<ApiResponse> getAllCategories() {
+        List<CategoryDto> categories = categoryRepository.findByParentCategoryIsNull()
+                .stream()
+                .map(cat -> new CategoryDto(
+                        cat.getCategoryId(),
+                        cat.getCategoryName(),
+                        cat.getCategoryIcon()
+                ))
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(new ApiResponse(
+                "Categories fetched successfully",
+                Map.of("categories", categories)
+        ));
+    }
+    
+    @Override
+    @Transactional
+    public ResponseEntity<ApiResponse> saveCategory(CategoryRequestDto request, Integer adminId) {
+
+        try {
+            // 1. Find or create parent category
+            Category parentCategory = categoryRepository
+                    .findByCategoryNameIgnoreCase(request.getCategoryName())
+                    .orElseGet(() -> {
+                        Category newCat = new Category();
+                        newCat.setCategoryName(request.getCategoryName());
+                        newCat.setCategoryIcon(request.getCategoryIcon());
+                        newCat.setCreatedOn(LocalDateTime.now());
+                        newCat.setCreatedBy(adminId);
+                        return categoryRepository.save(newCat);
+                    });
+
+            // Update icon if category already exists
+            if (request.getCategoryIcon() != null) {
+                parentCategory.setCategoryIcon(request.getCategoryIcon());
+                parentCategory.setModifiedOn(LocalDateTime.now());
+                parentCategory.setModifiedBy(adminId);
+                categoryRepository.save(parentCategory);
+            }
+
+            // 2. Find or create subcategory
+            Category subCategory = categoryRepository
+                    .findByCategoryNameIgnoreCaseAndParentCategory(
+                            request.getSubCategoryName(), parentCategory)
+                    .orElseGet(() -> {
+                        Category newSub = new Category();
+                        newSub.setCategoryName(request.getSubCategoryName());
+                        newSub.setCategoryIcon(request.getSubCategoryIcon());
+                        newSub.setParentCategory(parentCategory);
+                        newSub.setCreatedOn(LocalDateTime.now());
+                        newSub.setCreatedBy(adminId);
+                        return categoryRepository.save(newSub);
+                    });
+
+            // Update sub icon if subcategory already exists
+            if (request.getSubCategoryIcon() != null) {
+                subCategory.setCategoryIcon(request.getSubCategoryIcon());
+                subCategory.setModifiedOn(LocalDateTime.now());
+                subCategory.setModifiedBy(adminId);
+                categoryRepository.save(subCategory);
+            }
+
+            // 3. Delete existing questions for this subcategory (overwrite)
+            categoryFormRepository.deleteByCategory(subCategory);
+
+            // 4. Save new questions
+            if (request.getQuestions() != null && !request.getQuestions().isEmpty()) {
+                List<CategoryForm> forms = request.getQuestions().stream()
+                        .map(q -> mapToForm(q, subCategory, adminId))
+                        .collect(Collectors.toList());
+                categoryFormRepository.saveAll(forms);
+            }
+
+            return ResponseEntity.ok(new ApiResponse(
+                    "Category saved successfully",
+                    Map.of(
+                            "categoryId", parentCategory.getCategoryId(),
+                            "subCategoryId", subCategory.getCategoryId()
+                    )
+            ));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse("Failed to save category: " + e.getMessage(), null));
+        }
+    }
+    
+    private CategoryForm mapToForm(QuestionDto q, Category subCategory, Integer adminId) {
+        CategoryForm form = new CategoryForm();
+        form.setCategory(subCategory);
+        form.setQuestion(q.getQuestion());
+        form.setResponseType(q.getResponseType());
+        form.setRequired(q.getRequired() != null ? q.getRequired() : false);
+        form.setPlaceholder(q.getPlaceholder());
+        form.setCreatedOn(LocalDateTime.now());
+        form.setCreatedBy(adminId);
+
+        if (q.getOptions() != null && !q.getOptions().isEmpty()) {
+            try {
+                form.setOptions(new ObjectMapper().writeValueAsString(q.getOptions()));
+            } catch (JsonProcessingException e) {
+                form.setOptions("[]");
+            }
+        } else {
+            form.setOptions("[]");
+        }
+
+        return form;
+    }
+    
+    
+    @Override
+    public ResponseEntity<ApiResponse> getSubCategories(Integer parentCategoryId) {
+
+        Optional<Category> parentCategory = categoryRepository.findById(parentCategoryId);
+
+        if (parentCategory.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse("Category not found", null));
+        }
+
+        List<CategoryDto> subCategories = categoryRepository
+                .findByParentCategory(parentCategory.get())
+                .stream()
+                .map(cat -> new CategoryDto(
+                        cat.getCategoryId(),
+                        cat.getCategoryName(),
+                        cat.getCategoryIcon()
+                ))
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(new ApiResponse(
+                "Subcategories fetched successfully",
+                Map.of("subCategories", subCategories)
+        ));
+    }
+    
+    @Override
+    public ResponseEntity<ApiResponse> getQuestionsBySubCategory(Integer subCategoryId) {
+
+        Optional<Category> subCategory = categoryRepository.findById(subCategoryId);
+
+        if (subCategory.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse("Subcategory not found", null));
+        }
+
+        List<QuestionDto> questions = categoryFormRepository
+                .findByCategory(subCategory.get())
+                .stream()
+                .map(form -> {
+                    QuestionDto dto = new QuestionDto();
+                    dto.setQuestion(form.getQuestion());
+                    dto.setResponseType(form.getResponseType());
+                    dto.setRequired(form.getRequired());
+                    dto.setPlaceholder(form.getPlaceholder());
+
+                    // Deserialize options JSON string back to List
+                    try {
+                        if (form.getOptions() != null && !form.getOptions().isEmpty()) {
+                            List<String> opts = new ObjectMapper().readValue(
+                                form.getOptions(),
+                                new TypeReference<List<String>>() {}
+                            );
+                            dto.setOptions(opts);
+                        } else {
+                            dto.setOptions(List.of());
+                        }
+                    } catch (JsonProcessingException e) {
+                        dto.setOptions(List.of());
+                    }
+
+                    return dto;
+                })
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(new ApiResponse(
+                "Questions fetched successfully",
+                Map.of(
+                    "subCategoryId", subCategoryId,
+                    "subCategoryName", subCategory.get().getCategoryName(),
+                    "questions", questions
+                )
+        ));
+    }
+    
+}

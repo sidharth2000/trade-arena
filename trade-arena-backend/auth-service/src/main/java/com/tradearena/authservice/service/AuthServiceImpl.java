@@ -1,7 +1,9 @@
 package com.tradearena.authservice.service;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.tradearena.authservice.dto.ApiResponse;
+import com.tradearena.authservice.dto.LoginRequest;
 import com.tradearena.authservice.dto.RegisterRequest;
 import com.tradearena.authservice.dto.VerifyOtpRequest;
 import com.tradearena.authservice.model.AuthProvider;
@@ -20,6 +23,7 @@ import com.tradearena.authservice.model.User;
 import com.tradearena.authservice.model.VerificationToken;
 import com.tradearena.authservice.repository.UserRepository;
 import com.tradearena.authservice.repository.VerificationTokenRepository;
+import com.tradearena.authservice.util.JwtUtil;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -35,6 +39,9 @@ public class AuthServiceImpl implements AuthService {
 
 	@Autowired
 	private BCryptPasswordEncoder passwordEncoder;
+	
+	@Autowired
+	JwtUtil jwtUtil;
 
 	@Override
 	@Transactional
@@ -111,5 +118,46 @@ public class AuthServiceImpl implements AuthService {
 		verificationTokenRepository.delete(verificationToken);
 
 		return ResponseEntity.ok(new ApiResponse("Email verified successfully. You can now log in.", null));
+	}
+	
+	
+	@Override
+	public ResponseEntity<ApiResponse> login(LoginRequest request) {
+
+	    // 1. Check if user exists
+	    Optional<User> optionalUser = userRepository.findByEmail(request.getEmail());
+	    if (optionalUser.isEmpty()) {
+	    	return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+	                .body(new ApiResponse("Invalid email or password", null));
+	    }
+
+	    User user = optionalUser.get();
+
+	    // 2. Check if account is verified
+	    if (!user.getIsVerified()) {
+	    	return ResponseEntity.status(HttpStatus.FORBIDDEN)
+	                .body(new ApiResponse("Account not verified. Please complete registeration first.", null));
+	    }
+
+	    // 3. Validate password
+	    if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+	    	return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+	                .body(new ApiResponse("Invalid email or password", null));
+	    }
+
+	    // 4. Generate JWT token with all claims
+	    String token = jwtUtil.generateToken(
+	            user.getUserId().toString(),
+	            user.getEmail(),
+	            user.getRole().toString()
+	    );
+
+	    // 5. Return token in response
+	    Map<String, Object> payload = new HashMap<>();
+	    payload.put("token", "Bearer " + token);
+	    payload.put("email", user.getEmail());
+	    payload.put("role", user.getRole());
+
+	    return ResponseEntity.ok(new ApiResponse("Login successful", payload));
 	}
 }

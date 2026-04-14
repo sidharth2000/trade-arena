@@ -15,17 +15,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
-/**
- * SecurityConfig
- *
- * PERMITTED (no JWT required):
- *   POST /api/notifications/send       — internal service-to-service calls
- *   GET  /api/notifications/stream/**  — SSE (browser EventSource cannot send auth headers)
- *   GET  /actuator/**                  — health checks for Eureka
- *
- * SECURED (JWT required):
- *   All other /api/notifications/** endpoints
- */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {

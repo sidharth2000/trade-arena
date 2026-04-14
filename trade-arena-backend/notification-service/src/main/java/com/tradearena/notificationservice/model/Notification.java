@@ -23,11 +23,7 @@ public class Notification {
     @Column(nullable = false, length = 2000)
     private String message;
 
-    /**
-     * Stored as the enum name string (e.g. "OUTBID", "AUCTION_WIN").
-     * Using @Enumerated(EnumType.STRING) so DB values are human-readable
-     * and safe if enum ordinals ever change.
-     */
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 80)
     private NotificationType type;
@@ -38,11 +34,7 @@ public class Notification {
     @Column(nullable = false)
     private LocalDateTime timestamp;
 
-    /**
-     * Optional ID of the related entity (product, auction, order).
-     * Persisted so the frontend can deep-link to the relevant page.
-     * Populated from NotificationRequest.referenceId.
-     */
+
     @Column(name = "reference_id")
     private Long referenceId;
 
@@ -73,7 +65,6 @@ public class Notification {
         }
     }
 
-    // Getters
     public Long getNotificationId()     { return notificationId; }
     public Long getUserId()             { return userId; }
     public String getMessage()          { return message; }
@@ -82,7 +73,6 @@ public class Notification {
     public LocalDateTime getTimestamp() { return timestamp; }
     public Long getReferenceId()        { return referenceId; }
 
-    // Setters
     public void setNotificationId(Long notificationId) { this.notificationId = notificationId; }
     public void setUserId(Long userId)                 { this.userId = userId; }
     public void setMessage(String message)             { this.message = message; }

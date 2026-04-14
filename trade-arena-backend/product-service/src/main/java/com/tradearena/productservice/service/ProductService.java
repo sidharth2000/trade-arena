@@ -1,246 +1,160 @@
 package com.tradearena.productservice.service;
 
-import com.tradearena.productservice.client.AdminServiceClient;
-import com.tradearena.productservice.dto.*;
-import com.tradearena.productservice.exception.ProductNotFoundException;
-import com.tradearena.productservice.exception.UnauthorisedActionException;
-import com.tradearena.productservice.model.Product;
-import com.tradearena.productservice.model.ProductStatus;
-import com.tradearena.productservice.repository.ProductRepository;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.UUID;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
+import com.tradearena.productservice.client.AdminServiceClient;
+import com.tradearena.productservice.dto.CreateProductRequest;
+import com.tradearena.productservice.dto.PagedResponse;
+import com.tradearena.productservice.dto.ProductDetailResponse;
+import com.tradearena.productservice.dto.ProductListingSummary;
+import com.tradearena.productservice.dto.RemoveProductResponse;
+import com.tradearena.productservice.exception.ProductNotFoundException;
+import com.tradearena.productservice.exception.UnauthorisedActionException;
+import com.tradearena.productservice.model.Product;
+import com.tradearena.productservice.model.ProductInformation;
+import com.tradearena.productservice.model.ProductStatus;
+import com.tradearena.productservice.repository.ProductRepository;
 
 @Service
 public class ProductService {
 
+	@Autowired
+	AdminServiceClient adminClient;
+	
     private final ProductRepository repository;
-    private final AdminServiceClient adminClient;
 
-    public ProductService(ProductRepository repository, AdminServiceClient adminClient) {
-        this.repository  = repository;
-        this.adminClient = adminClient;
+    public ProductService(ProductRepository repository) {
+        this.repository = repository;
     }
 
-    // -----------------------------------------------------------------------
-    // CREATE
-    // -----------------------------------------------------------------------
+    public PagedResponse<ProductListingSummary> getProducts(
+            UUID categoryId, UUID subCategoryId, Long sellerId,
+            ProductStatus status, int page, int size) {
+        Page<ProductListingSummary> result = repository
+                .findWithFilters(categoryId, subCategoryId, sellerId, status,
+                        PageRequest.of(page, size))
+                .map(ProductListingSummary::fromEntity);
+        return PagedResponse.from(result);
+    }
 
-    /**
-     * Create a new product listing.
-     * sellerId comes from the X-User-Id header forwarded by the API Gateway.
-     */
+    public ProductDetailResponse getProductById(UUID id) {
+        return ProductDetailResponse.fromEntity(findOrThrow(id));
+    }
+
     @Transactional
-    public ProductResponse createProduct(CreateProductRequest request, Integer sellerId) {
-        validateAuctionFields(request.getAuctionEnabled(), request.getAuctionEndTime(), request.getMinimumBidPrice());
-
+    public ProductDetailResponse createProduct(CreateProductRequest request, Long sellerId) {
+        if (Boolean.TRUE.equals(request.getQuickBidEnabled())) {
+            validateQuickBidFields(request.getQuickBidEndTime(),
+                    request.getQuickBidStartingPrice());
+        }
+        System.out.println("arrives");
         Product product = new Product();
         product.setSellerId(sellerId);
         product.setTitle(request.getTitle());
         product.setDescription(request.getDescription());
         product.setPrice(request.getPrice());
         product.setCategoryId(request.getCategoryId());
-        product.setImageUrls(request.getImageUrls());
-        product.setSpecificationValues(request.getSpecificationValues());
+        product.setSubCategoryId(request.getSubCategoryId());
+        product.setCondition(request.getCondition());
 
-        if (Boolean.TRUE.equals(request.getAuctionEnabled())) {
-            product.setAuctionEnabled(true);
+        if (Boolean.TRUE.equals(request.getQuickBidEnabled())) {
+            product.setQuickBidEnabled(true);
+            product.setQuickBidStartTime(LocalDateTime.now());
+            product.setQuickBidEndTime(request.getQuickBidEndTime());
+            product.setQuickBidStartingPrice(request.getQuickBidStartingPrice());
             product.setStatus(ProductStatus.AUCTION);
-            product.setAuctionEndTime(request.getAuctionEndTime());
-            product.setMinimumBidPrice(request.getMinimumBidPrice());
         } else {
-            product.setAuctionEnabled(false);
+            product.setQuickBidEnabled(false);
             product.setStatus(ProductStatus.ACTIVE);
         }
 
-        return ProductResponse.fromEntity(repository.save(product));
-    }
-
-    // -----------------------------------------------------------------------
-    // READ
-    // -----------------------------------------------------------------------
-
-    /** Get a single product by ID */
-    public ProductResponse getProductById(Long productId) {
-        return ProductResponse.fromEntity(findOrThrow(productId));
-    }
-
-    /** Get all listings by a seller */
-    public List<ProductResponse> getProductsBySeller(Integer sellerId) {
-        return repository.findBySellerIdOrderByCreatedAtDesc(sellerId)
-                .stream()
-                .map(ProductResponse::fromEntity)
-                .collect(Collectors.toList());
-    }
-
-    /** Browse all active listings — paginated */
-    public PagedResponse<ProductResponse> getActiveListings(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<ProductResponse> result = repository
-                .findByStatusOrderByCreatedAtDesc(ProductStatus.ACTIVE, pageable)
-                .map(ProductResponse::fromEntity);
-        return PagedResponse.from(result);
-    }
-
-    /** Browse active listings by category — paginated */
-    public PagedResponse<ProductResponse> getListingsByCategory(Integer categoryId, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<ProductResponse> result = repository
-                .findByCategoryIdAndStatusOrderByCreatedAtDesc(categoryId, ProductStatus.ACTIVE, pageable)
-                .map(ProductResponse::fromEntity);
-        return PagedResponse.from(result);
-    }
-
-    /** Search listings by keyword, optionally filtered by category — paginated */
-    public PagedResponse<ProductResponse> searchProducts(String keyword, Integer categoryId, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<ProductResponse> result;
-
-        if (categoryId != null) {
-            result = repository.searchByKeywordAndCategory(keyword, categoryId, ProductStatus.ACTIVE, pageable)
-                    .map(ProductResponse::fromEntity);
-        } else {
-            result = repository.searchByKeyword(keyword, ProductStatus.ACTIVE, pageable)
-                    .map(ProductResponse::fromEntity);
+        if (request.getProductInformation() != null) {
+            for (CreateProductRequest.FormAnswer fa : request.getProductInformation()) {
+                ProductInformation info = new ProductInformation();
+                info.setProduct(product);
+                info.setFormId(fa.getFormId());
+                info.setAnswer(fa.getAnswer());
+                product.getProductInformation().add(info);
+            }
         }
-        return PagedResponse.from(result);
+
+        return ProductDetailResponse.fromEntity(repository.save(product));
     }
 
-    /** Browse active auction listings — paginated */
-    public PagedResponse<ProductResponse> getAuctionListings(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<ProductResponse> result = repository
-                .findByStatusAndAuctionEnabledTrueOrderByAuctionEndTimeAsc(ProductStatus.AUCTION, pageable)
-                .map(ProductResponse::fromEntity);
-        return PagedResponse.from(result);
-    }
-
-    /**
-     * Get category form fields from Admin Service.
-     * Frontend uses this to render the dynamic specification form when a seller
-     * selects a category/subcategory before creating a listing.
-     */
-    public Object getCategoryForm(Integer categoryId) {
-        return adminClient.getCategoryForm(categoryId);
-    }
-
-    // -----------------------------------------------------------------------
-    // UPDATE
-    // -----------------------------------------------------------------------
-
-    /**
-     * Update a product listing.
-     * Only the seller who owns the listing can update it.
-     */
     @Transactional
-    public ProductResponse updateProduct(Long productId, UpdateProductRequest request, Integer sellerId) {
-        Product product = findOrThrow(productId);
+    public RemoveProductResponse removeProduct(UUID id, Long sellerId) {
+        Product product = findOrThrow(id);
         assertOwner(product, sellerId);
-
-        if (request.getTitle() != null)                 product.setTitle(request.getTitle());
-        if (request.getDescription() != null)           product.setDescription(request.getDescription());
-        if (request.getPrice() != null)                 product.setPrice(request.getPrice());
-        if (request.getImageUrls() != null)             product.setImageUrls(request.getImageUrls());
-        if (request.getSpecificationValues() != null)   product.setSpecificationValues(request.getSpecificationValues());
-
-        return ProductResponse.fromEntity(repository.save(product));
+        if (product.getStatus() == ProductStatus.REMOVED) {
+            throw new IllegalStateException("Product is already removed");
+        }
+        product.setStatus(ProductStatus.REMOVED);
+        Product saved = repository.save(product);
+        return new RemoveProductResponse(saved.getId(), saved.getStatus(), saved.getUpdatedAt());
     }
 
-    /**
-     * Enable Quick Bid (auction) mode on an existing listing.
-     * Switches status from ACTIVE to AUCTION.
-     */
     @Transactional
-    public ProductResponse enableAuction(Long productId, EnableAuctionRequest request, Integer sellerId) {
-        Product product = findOrThrow(productId);
-        assertOwner(product, sellerId);
-
-        if (product.getStatus() != ProductStatus.ACTIVE) {
-            throw new IllegalStateException("Auction mode can only be enabled on ACTIVE listings");
-        }
-        if (request.getAuctionEndTime().isBefore(LocalDateTime.now().plusMinutes(5))) {
-            throw new IllegalArgumentException("Auction end time must be at least 5 minutes in the future");
-        }
-
-        product.setAuctionEnabled(true);
-        product.setStatus(ProductStatus.AUCTION);
-        product.setAuctionEndTime(request.getAuctionEndTime());
-        product.setMinimumBidPrice(request.getMinimumBidPrice());
-
-        return ProductResponse.fromEntity(repository.save(product));
-    }
-
-    /**
-     * Mark a product as SOLD (fixed-price purchase completed).
-     * Called internally by the Bidding/Order service.
-     */
-    @Transactional
-    public ProductResponse markAsSold(Long productId) {
-        Product product = findOrThrow(productId);
+    public void markAsSold(UUID id) {
+        Product product = findOrThrow(id);
         product.setStatus(ProductStatus.SOLD);
-        return ProductResponse.fromEntity(repository.save(product));
-    }
-
-    /**
-     * Mark a product as AUCTION_SOLD (auction winner confirmed payment).
-     * Called internally by the Bidding/Camunda service.
-     */
-    @Transactional
-    public ProductResponse markAsAuctionSold(Long productId) {
-        Product product = findOrThrow(productId);
-        product.setStatus(ProductStatus.AUCTION_SOLD);
-        return ProductResponse.fromEntity(repository.save(product));
-    }
-
-    // -----------------------------------------------------------------------
-    // DELETE
-    // -----------------------------------------------------------------------
-
-    /**
-     * Deactivate (soft-delete) a listing.
-     * Sets status to INACTIVE rather than deleting the row,
-     * preserving audit trail and bid history references.
-     */
-    @Transactional
-    public void deactivateProduct(Long productId, Integer sellerId) {
-        Product product = findOrThrow(productId);
-        assertOwner(product, sellerId);
-        product.setStatus(ProductStatus.INACTIVE);
         repository.save(product);
     }
 
-    // -----------------------------------------------------------------------
-    // Private helpers
-    // -----------------------------------------------------------------------
-
-    private Product findOrThrow(Long productId) {
-        return repository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException("Product not found: " + productId));
+    @Transactional
+    public void markAsAuctionSold(UUID id) {
+        Product product = findOrThrow(id);
+        product.setStatus(ProductStatus.AUCTION_SOLD);
+        repository.save(product);
     }
 
-    private void assertOwner(Product product, Integer sellerId) {
+    private Product findOrThrow(UUID id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new ProductNotFoundException("Product not found: " + id));
+    }
+
+    private void assertOwner(Product product, Long sellerId) {
         if (!product.getSellerId().equals(sellerId)) {
-            throw new UnauthorisedActionException("You are not the owner of this listing");
+            throw new UnauthorisedActionException(
+                    "You are not the owner of this listing");
         }
     }
 
-    private void validateAuctionFields(Boolean auctionEnabled, LocalDateTime endTime, Double minBid) {
-        if (Boolean.TRUE.equals(auctionEnabled)) {
-            if (endTime == null) {
-                throw new IllegalArgumentException("auctionEndTime is required when auctionEnabled is true");
-            }
-            if (minBid == null) {
-                throw new IllegalArgumentException("minimumBidPrice is required when auctionEnabled is true");
-            }
-            if (endTime.isBefore(LocalDateTime.now().plusMinutes(5))) {
-                throw new IllegalArgumentException("Auction end time must be at least 5 minutes in the future");
-            }
+    private void validateQuickBidFields(LocalDateTime endTime, BigDecimal startingPrice) {
+        if (endTime == null) {
+            throw new IllegalArgumentException(
+                    "quickBidEndTime is required when quickBidEnabled is true");
         }
+        if (startingPrice == null) {
+            throw new IllegalArgumentException(
+                    "quickBidStartingPrice is required when quickBidEnabled is true");
+        }
+        if (endTime.isBefore(LocalDateTime.now().plusMinutes(5))) {
+            throw new IllegalArgumentException(
+                    "quickBidEndTime must be at least 5 minutes in the future");
+        }
+    }
+    
+    
+    // APIS for sell page
+    
+    public Map<String, Object> getCategoriesFromAdmin() {
+        return adminClient.getAllCategories();
+    }
+    
+    public Map<String, Object> getSubCategories(Integer categoryId) {
+        return adminClient.getSubCategories(categoryId);
+    }
+    
+    public Map<String, Object> getQuestions(Integer subCategoryId) {
+        return adminClient.getQuestions(subCategoryId);
     }
 }

@@ -10,21 +10,18 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Set;
 
 @Service
 public class EmailService {
 
     private final JavaMailSender mailSender;
+    private final EmailTemplateBuilder templateBuilder;
 
     @Value("${trade-arena.mail.from}")
     private String fromAddress;
 
-    /**
-     * Only these types trigger emails (critical events as per requirements).
-     * Uses the NotificationType enum for type safety.
-     */
     private static final Set<NotificationType> EMAIL_TYPES = Set.of(
             NotificationType.AUCTION_WIN,
             NotificationType.PAYMENT_REMINDER,
@@ -35,96 +32,54 @@ public class EmailService {
             NotificationType.BID_PLACED
     );
 
-    public EmailService(JavaMailSender mailSender) {
+    public EmailService(JavaMailSender mailSender, EmailTemplateBuilder templateBuilder) {
         this.mailSender = mailSender;
+        this.templateBuilder = templateBuilder;
     }
 
-    /**
-     * Check whether a given NotificationType should trigger an email.
-     * Used by NotificationService before calling sendEmail().
-     */
     public boolean isEmailType(NotificationType type) {
         return EMAIL_TYPES.contains(type);
     }
 
-    /**
-     * Sends an HTML email for the given notification request.
-     * Runs asynchronously on the emailTaskExecutor thread pool (see AsyncConfig)
-     * so it does not block the HTTP response or SSE push.
-     */
+    // ── Option A: Notification Service builds the email ──────────────────
     @Async("emailTaskExecutor")
     public void sendEmail(NotificationRequest req) {
-        if (req.getUserEmail() == null || req.getUserEmail().isBlank()) {
+        if (req.getUserEmail() == null || req.getUserEmail().isBlank()) return;
+        if (!isEmailType(req.getType())) return;
+
+        String subject = templateBuilder.buildSubject(req.getType(), req.getProductTitle());
+        String body    = templateBuilder.buildBody(req);
+
+        send(List.of(req.getUserEmail()), null, subject, body);
+    }
+
+    // ── Option B: Caller provides full HTML ──────────────────────────────
+    @Async("emailTaskExecutor")
+    public void sendHtmlEmail(List<String> to, List<String> cc,
+                              String subject, String htmlBody) {
+        if (to == null || to.isEmpty()) {
+            System.err.println("sendHtmlEmail: empty 'to' list — skipping.");
             return;
         }
-        if (!isEmailType(req.getType())) {
-            return;
-        }
+        send(to, cc, subject, htmlBody);
+    }
 
-        String subject = subjectFor(req.getType());
-        String bodyHtml = bodyFor(req);
-
+    // ── Shared send logic ─────────────────────────────────────────────────
+    private void send(List<String> to, List<String> cc,
+                      String subject, String htmlBody) {
         try {
-            MimeMessage mimeMessage = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "UTF-8");
+            MimeMessage mime = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mime, true, "UTF-8");
             helper.setFrom(fromAddress);
-            helper.setTo(req.getUserEmail());
+            helper.setTo(to.toArray(new String[0]));
+            if (cc != null && !cc.isEmpty()) {
+                helper.setCc(cc.toArray(new String[0]));
+            }
             helper.setSubject(subject);
-            helper.setText(bodyHtml, true); // HTML enabled
-
-            mailSender.send(mimeMessage);
+            helper.setText(htmlBody, true);
+            mailSender.send(mime);
         } catch (MessagingException e) {
-            // Fail gracefully — in-app notification already saved; email is best-effort.
-            System.err.println("Email sending failed for type=" + req.getType() + ": " + e.getMessage());
+            System.err.println("Email send failed: " + e.getMessage());
         }
-    }
-
-    private String subjectFor(NotificationType type) {
-        return switch (type) {
-            case AUCTION_WIN        -> "You won the auction on Trade Arena!";
-            case OUTBID             -> "You have been outbid!";
-            case PAYMENT_REMINDER   -> "Payment reminder - action required";
-            case PAYMENT_SUCCESS    -> "Payment successful";
-            case ACCOUNT_RESTRICTED -> "Account action required";
-            case FALLBACK_OFFER     -> "You have a second-chance offer!";
-            case BID_PLACED         -> "New bid received on your listing";
-            default                 -> "Trade Arena Notification";
-        };
-    }
-
-    private String bodyFor(NotificationRequest req) {
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("<div style='font-family:Arial, sans-serif; line-height:1.6; max-width:600px;'>")
-                .append("<h2 style='color:#2c7a4b;'>Trade Arena</h2>")
-                .append("<p>").append(escape(req.getMessage())).append("</p>");
-
-        // Optional enrichment fields — only rendered when present (Bug #1 fix)
-        if (req.getProductTitle() != null && !req.getProductTitle().isBlank()) {
-            sb.append("<p><b>Product:</b> ").append(escape(req.getProductTitle())).append("</p>");
-        }
-        if (req.getBidAmount() != null) {
-            sb.append("<p><b>Bid Amount:</b> &euro;").append(String.format("%.2f", req.getBidAmount())).append("</p>");
-        }
-        if (req.getAuctionId() != null) {
-            sb.append("<p><b>Auction ID:</b> ").append(req.getAuctionId()).append("</p>");
-        }
-        if (req.getPaymentDeadline() != null) {
-            sb.append("<p><b>Payment Deadline:</b> ").append(req.getPaymentDeadline().format(dtf)).append("</p>");
-        }
-
-        sb.append("<hr/>")
-                .append("<p style='font-size:12px;color:#666;'>This is an automated message from Trade Arena. Please do not reply.</p>")
-                .append("</div>");
-
-        return sb.toString();
-    }
-
-    private String escape(String text) {
-        if (text == null) return "";
-        return text.replace("&", "&amp;")
-                   .replace("<", "&lt;")
-                   .replace(">", "&gt;");
     }
 }

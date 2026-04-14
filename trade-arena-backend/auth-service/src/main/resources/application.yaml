@@ -20,6 +20,23 @@ spring:
         hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: krithikaaie21@gmail.com
+    password: ztftppfuxvqiuvon
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+app:
+  jwt:
+    secret: TradeArena@SecretKey#2025$JwtAuth!HS256Ready
+    expiration : 3600000
+
 eureka:
   client:
     service-url:

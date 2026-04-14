@@ -3,6 +3,7 @@ package com.tradearena.notificationservice.service;
 import com.tradearena.notificationservice.dto.NotificationRequest;
 import com.tradearena.notificationservice.dto.NotificationResponse;
 import com.tradearena.notificationservice.model.Notification;
+import com.tradearena.notificationservice.model.NotificationType;
 import com.tradearena.notificationservice.repository.NotificationRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -66,12 +67,24 @@ public class NotificationService {
         pushToSse(saved.getUserId(), response);
 
         // 3) Send email if requested and eligible type
+// 3) Send email if requested and eligible type
         if (request.isSendEmail() && emailService.isEmailType(request.getType())) {
-            emailService.sendEmail(request);
+            if (request.getHtmlBody() != null && !request.getHtmlBody().isBlank()) {
+                // Option B — caller provided full HTML
+                String subject = buildSubject(request.getType(), request.getProductTitle());
+                emailService.sendHtmlEmail(
+                        request.getTo(),
+                        request.getCc(),
+                        subject,
+                        request.getHtmlBody()
+                );
+            } else {
+                emailService.sendEmail(request);
+            }
         }
-
         return response;
     }
+
 
     public List<NotificationResponse> getForUser(Long userId) {
         return repository.findByUserIdOrderByTimestampDesc(userId)
@@ -117,5 +130,19 @@ public class NotificationService {
                 n.getTimestamp(),
                 n.getReferenceId()
         );
+    }
+
+    private String buildSubject(NotificationType type, String productTitle) {
+        String title = productTitle != null ? " - " + productTitle : "";
+        return switch (type) {
+            case OUTBID             -> "Trade Arena: You've been outbid" + title;
+            case AUCTION_WIN        -> "Trade Arena: You won the auction" + title;
+            case PAYMENT_REMINDER   -> "Trade Arena: Payment reminder" + title;
+            case AUCTION_ENDED      -> "Trade Arena: Auction ended" + title;
+            case PAYMENT_SUCCESS    -> "Trade Arena: Payment confirmed" + title;
+            case ACCOUNT_RESTRICTED -> "Trade Arena: Account restricted";
+            case FALLBACK_OFFER     -> "Trade Arena: Item available for you" + title;
+            default                 -> "Trade Arena: New notification" + title;
+        };
     }
 }

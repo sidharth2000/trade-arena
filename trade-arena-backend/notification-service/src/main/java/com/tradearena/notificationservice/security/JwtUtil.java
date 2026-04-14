@@ -9,11 +9,6 @@ import java.security.Key;
 import java.util.Base64;
 import java.util.logging.Logger;
 
-/**
- * JwtUtil — validates JWT tokens issued by the Auth Service.
- * The Notification Service NEVER generates tokens; it only validates them.
- * The JWT secret must match the one configured in the Auth Service exactly.
- */
 @Component
 public class JwtUtil {
 
@@ -30,10 +25,6 @@ public class JwtUtil {
         this.signingKey = Keys.hmacShaKeyFor(keyBytes);
     }
 
-    /**
-     * Returns true if the token is valid (not expired, not tampered with).
-     * @param token JWT string without the "Bearer " prefix
-     */
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder()
@@ -55,9 +46,6 @@ public class JwtUtil {
         return false;
     }
 
-    /**
-     * Extracts the userId (subject) from a valid JWT token.
-     */
     public String getUserIdFromToken(String token) {
         Claims claims = Jwts.parserBuilder()
                 .setSigningKey(signingKey)
@@ -67,9 +55,6 @@ public class JwtUtil {
         return claims.getSubject();
     }
 
-    /**
-     * Extracts a specific claim (e.g. "role", "email") from a valid token.
-     */
     public String getClaim(String token, String claimKey) {
         Claims claims = Jwts.parserBuilder()
                 .setSigningKey(signingKey)
