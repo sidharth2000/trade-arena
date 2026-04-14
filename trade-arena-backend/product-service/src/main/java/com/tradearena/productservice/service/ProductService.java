@@ -37,7 +37,7 @@ public class ProductService {
     }
 
     public PagedResponse<ProductListingSummary> getProducts(
-            UUID categoryId, UUID subCategoryId, Long sellerId,
+            Integer categoryId, Integer subCategoryId, Long sellerId,
             ProductStatus status, int page, int size) {
         Page<ProductListingSummary> result = repository
                 .findWithFilters(categoryId, subCategoryId, sellerId, status,

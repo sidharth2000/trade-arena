@@ -8,6 +8,7 @@ import VerifyOtp from '../pages/VerifyOtp'
 import SellProduct from '../pages/SellProduct'
 import ChatPage from '../pages/ChatPage'
 import ProductsPage from '../pages/ProductsPage'
+import ProductDetailPage from '../pages/ProductDetailPage'
 
 import CategoryConfiguration from '../pages/admin/CategoryConfiguration'
 
@@ -30,7 +31,7 @@ const router = createBrowserRouter([
         children: [
             { index: true, element: <ProductsPage /> },
             { path: 'products', element: <ProductsPage /> },
-            { path: 'products/:id', element: <div>Product Detail — coming soon</div> },
+            { path: 'products/:id', element: <ProductDetailPage /> },
             { path: 'sell', element: <SellProduct /> },
             { path: 'chat', element: <ChatPage /> },
         ],

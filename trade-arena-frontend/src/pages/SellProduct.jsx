@@ -3,11 +3,10 @@ import { useNavigate } from 'react-router-dom'
 import {
   Box, Container, Stepper, Step, StepLabel, Typography,
   Grid, Card, CardActionArea, CardContent, TextField,
-  MenuItem, Button, CircularProgress, Alert, Chip,
-  FormControlLabel, Switch, InputAdornment
+  MenuItem, Button, CircularProgress, Alert, Chip, InputAdornment
 } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
-import { ChevronRight, Tag, Clock } from 'lucide-react'
+import { ChevronRight, Tag } from 'lucide-react'
 import { productApi } from '../api/ProductApi'
 import { useAuth } from '../hooks/useAuth'
 import styles from './SellProduct.module.css'
@@ -44,13 +43,9 @@ export default function SellProduct() {
     title: '',
     description: '',
     price: '',
-    quickBidEnabled: false,
-    quickBidEndTime: '',
-    quickBidStartingPrice: '',
     condition: 'USED',
   })
 
-  // answers keyed by questionId
   const [answers, setAnswers] = useState({})
 
   const navBg = theme.palette.custom?.nav ?? theme.palette.primary.main
@@ -88,7 +83,6 @@ export default function SellProduct() {
       const res = await productApi.getQuestionsBySubCategory(sub.categoryId)
       const qs = res.payload?.questions ?? res
       setQuestions(qs)
-      // Key answers by questionId
       setAnswers(Object.fromEntries(qs.map((q) => [q.questionId, ''])))
     } catch {
       setError('Failed to load form fields')
@@ -111,7 +105,6 @@ export default function SellProduct() {
     setSubmitting(true)
     setError('')
     try {
-      // Build productInformation using questionId
       const productInformation = questions.map((q) => ({
         formId: q.questionId,
         answer: answers[q.questionId] ?? '',
@@ -124,10 +117,8 @@ export default function SellProduct() {
         categoryId: selectedCat.categoryId,
         subCategoryId: selectedSubCat.categoryId,
         productInformation,
-        quickBidEnabled: form.quickBidEnabled,
-        quickBidStartingPrice: form.quickBidEnabled ? Number(form.quickBidStartingPrice) : null,
-        quickBidEndTime: form.quickBidEnabled ? form.quickBidEndTime : null,
         condition: form.condition,
+        quickBidEnabled: false,
       }
 
       await productApi.createProduct(payload, user.id)
@@ -143,7 +134,6 @@ export default function SellProduct() {
   const canSubmit = form.title && form.price &&
     questions.filter((q) => q.required).every((q) => answers[q.questionId])
 
-  // Render a single dynamic question field based on responseType
   const renderQuestion = (q) => {
     const label = `${q.question}${q.required ? ' *' : ''}`
     const value = answers[q.questionId] ?? ''
@@ -152,76 +142,49 @@ export default function SellProduct() {
     switch (q.responseType) {
       case 'CHOICE':
         return (
-          <TextField
-            key={q.questionId}
-            select fullWidth size="small" label={label}
-            value={value}
-            onChange={onChange}
-            sx={{ mb: 2 }}
-          >
+          <TextField key={q.questionId} select fullWidth size="small"
+            label={label} value={value} onChange={onChange} sx={{ mb: 2 }}>
             {q.options.map((opt) => (
               <MenuItem key={opt} value={opt}>{opt}</MenuItem>
             ))}
           </TextField>
         )
-
       case 'TEXT_AREA':
         return (
-          <TextField
-            key={q.questionId}
-            fullWidth multiline rows={3} size="small" label={label}
-            placeholder={q.placeholder ?? ''}
-            value={value}
-            onChange={onChange}
-            sx={{ mb: 2 }}
-          />
+          <TextField key={q.questionId} fullWidth multiline rows={3} size="small"
+            label={label} placeholder={q.placeholder ?? ''} value={value}
+            onChange={onChange} sx={{ mb: 2 }} />
         )
-
       case 'NUMBER':
         return (
-          <TextField
-            key={q.questionId}
-            fullWidth size="small" label={label} type="number"
-            placeholder={q.placeholder ?? ''}
-            value={value}
-            onChange={onChange}
-            sx={{ mb: 2 }}
-          />
+          <TextField key={q.questionId} fullWidth size="small" label={label}
+            type="number" placeholder={q.placeholder ?? ''} value={value}
+            onChange={onChange} sx={{ mb: 2 }} />
         )
-
       case 'DATE':
         return (
-          <TextField
-            key={q.questionId}
-            fullWidth size="small" label={label} type="date"
-            value={value}
-            onChange={onChange}
-            InputLabelProps={{ shrink: true }}
-            sx={{ mb: 2 }}
-          />
+          <TextField key={q.questionId} fullWidth size="small" label={label}
+            type="date" value={value} onChange={onChange}
+            InputLabelProps={{ shrink: true }} sx={{ mb: 2 }} />
         )
-
       case 'TEXT':
       default:
         return (
-          <TextField
-            key={q.questionId}
-            fullWidth size="small" label={label}
-            placeholder={q.placeholder ?? ''}
-            value={value}
-            onChange={onChange}
-            sx={{ mb: 2 }}
-          />
+          <TextField key={q.questionId} fullWidth size="small" label={label}
+            placeholder={q.placeholder ?? ''} value={value}
+            onChange={onChange} sx={{ mb: 2 }} />
         )
     }
   }
 
   return (
     <Box sx={{ background: theme.palette.background.default, minHeight: '100vh', pb: 6 }}>
+
       {/* Hero banner */}
       <Box sx={{ background: navBg, py: 3, px: 4 }}>
         <Container maxWidth="lg">
-          <Typography variant="h5" fontWeight={700} color="#fff" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography variant="h5" fontWeight={700} color="#fff"
+            sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Tag size={22} color="#ffe500" /> Start Selling
           </Typography>
           <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.75)', mt: 0.5 }}>
@@ -248,7 +211,8 @@ export default function SellProduct() {
               <Grid container spacing={2}>
                 {categories.map((cat) => (
                   <Grid item xs={6} sm={4} md={3} key={cat.categoryId}>
-                    <Card sx={{ border: `2px solid ${selectedCat?.categoryId === cat.categoryId ? navBg : 'transparent'}` }}>
+                    <Card className={styles.catCard}
+                      sx={{ border: `2px solid ${selectedCat?.categoryId === cat.categoryId ? navBg : 'transparent'}` }}>
                       <CardActionArea onClick={() => handleSelectCategory(cat)} sx={{ p: 2.5 }}>
                         <CardContent sx={{ p: '0 !important', textAlign: 'center' }}>
                           <CategoryIcon iconName={cat.categoryIcon} size={32} color={navBg} />
@@ -280,7 +244,7 @@ export default function SellProduct() {
               <Grid container spacing={2}>
                 {subCategories.map((sub) => (
                   <Grid item xs={6} sm={4} md={3} key={sub.categoryId}>
-                    <Card>
+                    <Card className={styles.catCard}>
                       <CardActionArea onClick={() => handleSelectSubCategory(sub)} sx={{ p: 2.5 }}>
                         <CardContent sx={{ p: '0 !important', textAlign: 'center' }}>
                           <CategoryIcon iconName={sub.categoryIcon} size={28} color={navBg} />
@@ -311,38 +275,35 @@ export default function SellProduct() {
 
             <Grid container spacing={3}>
               {/* Left — core + dynamic fields */}
-              <Grid item xs={12} md={7}>
+              <Grid item xs={12} md={8}>
                 <Card sx={{ p: 3, borderRadius: 2 }}>
                   <Typography variant="subtitle1" fontWeight={700} mb={2}>Product Information</Typography>
 
-                  <TextField
-                    fullWidth label="Title *" value={form.title}
+                  <TextField fullWidth label="Title *" value={form.title}
                     onChange={handleFormChange('title')} sx={{ mb: 2 }} size="small"
                     inputProps={{ maxLength: 150 }}
-                    helperText={`${form.title.length}/150`}
-                  />
+                    helperText={`${form.title.length}/150`} />
 
-                  <TextField
-                    fullWidth label="Price *" value={form.price}
-                    onChange={handleFormChange('price')} sx={{ mb: 2 }} size="small"
-                    type="number"
-                    InputProps={{ startAdornment: <InputAdornment position="start">₹</InputAdornment> }}
-                  />
+                  <TextField fullWidth label="Description" value={form.description}
+                    onChange={handleFormChange('description')} sx={{ mb: 2 }} size="small"
+                    multiline rows={3} inputProps={{ maxLength: 500 }} />
 
-                  <TextField
-                    fullWidth select label="Condition *" value={form.condition}
-                    onChange={handleFormChange('condition')} sx={{ mb: 2 }} size="small"
-                  >
-                    {[
-                      { value: 'NEW',         label: 'NEW' },
-                      { value: 'USED',        label: 'USED' },
-                      { value: 'REFURBISHED', label: 'REFURBISHED' },
-                    ].map((opt) => (
-                      <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
-                    ))}
-                  </TextField>
+                  <Grid container spacing={2} sx={{ mb: 2 }}>
+                    <Grid item xs={6}>
+                      <TextField fullWidth label="Price *" value={form.price}
+                        onChange={handleFormChange('price')} size="small" type="number"
+                        InputProps={{ startAdornment: <InputAdornment position="start">₹</InputAdornment> }} />
+                    </Grid>
+                    <Grid item xs={6}>
+                      <TextField fullWidth select label="Condition *" value={form.condition}
+                        onChange={handleFormChange('condition')} size="small">
+                        {['NEW', 'USED', 'REFURBISHED'].map((c) => (
+                          <MenuItem key={c} value={c}>{c}</MenuItem>
+                        ))}
+                      </TextField>
+                    </Grid>
+                  </Grid>
 
-                  {/* Dynamic questions from API */}
                   {questions.length > 0 && (
                     <>
                       <Typography variant="subtitle2" fontWeight={600} mb={1.5} color="text.secondary">
@@ -354,59 +315,26 @@ export default function SellProduct() {
                 </Card>
               </Grid>
 
-              {/* Right — Quick Bid + Submit */}
-              <Grid item xs={12} md={5}>
-                <Card sx={{
-                  p: 3, borderRadius: 2, mb: 2,
-                  border: `2px solid ${form.quickBidEnabled ? navBg : 'transparent'}`
-                }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Clock size={18} color={navBg} />
-                      <Typography variant="subtitle1" fontWeight={700}>Quick Bid</Typography>
-                    </Box>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={form.quickBidEnabled}
-                          onChange={(e) => setForm((f) => ({ ...f, quickBidEnabled: e.target.checked }))}
-                        />
-                      }
-                      label=""
-                    />
-                  </Box>
-                  <Typography variant="body2" color="text.secondary" mb={2}>
-                    Enable time-bound auction to sell faster. Highest bidder wins!
+              {/* Right — Submit */}
+              <Grid item xs={12} md={4}>
+                <Card sx={{ p: 3, borderRadius: 2 }}>
+                  <Typography variant="subtitle2" fontWeight={600} mb={1} color="text.secondary">
+                    Ready to list?
                   </Typography>
-
-                  {form.quickBidEnabled && (
-                    <>
-                      <TextField
-                        fullWidth label="Starting Bid Price *" value={form.quickBidStartingPrice}
-                        onChange={handleFormChange('quickBidStartingPrice')} size="small" type="number"
-                        sx={{ mb: 2 }}
-                        InputProps={{ startAdornment: <InputAdornment position="start">₹</InputAdornment> }}
-                      />
-                      <TextField
-                        fullWidth label="Auction End Time *" value={form.quickBidEndTime}
-                        onChange={handleFormChange('quickBidEndTime')} size="small"
-                        type="datetime-local" InputLabelProps={{ shrink: true }}
-                      />
-                    </>
-                  )}
+                  <Typography variant="body2" color="text.secondary" mb={2.5} lineHeight={1.6}>
+                    Review your details and post your listing to reach buyers instantly.
+                  </Typography>
+                  <Button
+                    variant="contained" fullWidth size="large"
+                    disabled={!canSubmit || submitting}
+                    onClick={handleSubmit}
+                    sx={{
+                      borderRadius: 2, fontWeight: 700, fontSize: 15, py: 1.5,
+                      background: navBg, '&:hover': { background: '#1a5dc8' }
+                    }}>
+                    {submitting ? <CircularProgress size={22} color="inherit" /> : 'Post Listing'}
+                  </Button>
                 </Card>
-
-                <Button
-                  variant="contained" fullWidth size="large"
-                  disabled={!canSubmit || submitting}
-                  onClick={handleSubmit}
-                  sx={{
-                    borderRadius: 2, fontWeight: 700, fontSize: 15, py: 1.5,
-                    background: navBg, '&:hover': { background: '#1a5dc8' }
-                  }}
-                >
-                  {submitting ? <CircularProgress size={22} color="inherit" /> : 'Post Listing'}
-                </Button>
               </Grid>
             </Grid>
           </Box>

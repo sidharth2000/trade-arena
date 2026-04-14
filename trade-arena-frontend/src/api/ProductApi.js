@@ -7,11 +7,12 @@ export const productApi = {
     return res.data
   },
 
-  // GET /api/products/{id}
-  getProductById: async (id) => {
-    const res = await client.get(`/api/products/${id}`)
-    return res.data
-  },
+ // GET /api/products/id/{id}
+ getProductById: async (id) => {
+   const res = await client.get(`/api/products/id/${id}`)
+   return res.data
+ },
+
 
   // POST /api/products  — requires X-User-Id header
   createProduct: async (payload, userId) => {
@@ -21,14 +22,13 @@ export const productApi = {
     return res.data
   },
 
-  // PATCH /api/products/{id}/remove
-  removeProduct: async (id, userId) => {
-    const res = await client.patch(`/api/products/${id}/remove`, null, {
-      headers: { 'X-User-Id': userId },
-    })
-    return res.data
-  },
-
+// PATCH /api/products/id/{id}/remove
+removeProduct: async (id, userId) => {
+  const res = await client.patch(`/api/products/id/${id}/remove`, null, {
+    headers: { 'X-User-Id': userId },
+  })
+  return res.data
+},
 
   getAllCategories: async () => {
         const res = await client.get('/api/products/categories')

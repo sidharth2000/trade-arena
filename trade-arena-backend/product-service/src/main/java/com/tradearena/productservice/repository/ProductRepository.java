@@ -22,8 +22,8 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
             ORDER BY p.createdAt DESC
             """)
     Page<Product> findWithFilters(
-            @Param("categoryId")    UUID categoryId,
-            @Param("subCategoryId") UUID subCategoryId,
+            @Param("categoryId")    Integer categoryId,
+            @Param("subCategoryId") Integer subCategoryId,
             @Param("sellerId")      Long sellerId,
             @Param("status")        ProductStatus status,
             Pageable pageable);

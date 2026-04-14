@@ -59,8 +59,8 @@ public class ProductController {
 
     @GetMapping
     public ResponseEntity<PagedResponse<ProductListingSummary>> getProducts(
-            @RequestParam(required = false) UUID categoryId,
-            @RequestParam(required = false) UUID subCategoryId,
+            @RequestParam(required = false) Integer categoryId,
+            @RequestParam(required = false) Integer subCategoryId,
             @RequestParam(required = false) Long sellerId,
             @RequestParam(required = false) ProductStatus status,
             @RequestParam(defaultValue = "0")  int page,
