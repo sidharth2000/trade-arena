@@ -1,4 +1,4 @@
-package com.tradearena.controller.service;
+package com.tradearena.service;
 
 import com.tradearena.dto.StartAuctionDTO;
 

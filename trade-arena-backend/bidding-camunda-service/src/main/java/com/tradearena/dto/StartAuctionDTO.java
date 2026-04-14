@@ -8,8 +8,17 @@ public class StartAuctionDTO {
     private UUID productId;
     private LocalDateTime auctionEndTime;
     private Double startingPrice;
+    private Integer sellerId;
 
-    public StartAuctionDTO() {}
+    public Integer getSellerId() {
+		return sellerId;
+	}
+
+	public void setSellerId(Integer sellerId) {
+		this.sellerId = sellerId;
+	}
+
+	public StartAuctionDTO() {}
 
     public StartAuctionDTO(UUID productId, LocalDateTime auctionEndTime, Double startingPrice) {
         this.productId = productId;

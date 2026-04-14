@@ -28,6 +28,7 @@ spring:
           predicates:
             - Path=/api/notifications/**
 
+
 app:
   jwt:
     secret: TradeArena@SecretKey#2025$JwtAuth!HS256Ready
