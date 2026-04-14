@@ -46,7 +46,8 @@ eureka:
     register-with-eureka: true
     fetch-registry: true
   instance:
-    prefer-ip-address: true
+    prefer-ip-address: false      # ← FIXED: was true, causes gateway routing to wrong IP
+    hostname: localhost
 
 trade-arena:
   mail:

@@ -1,0 +1,13 @@
+com\tradearena\model\AuctionStatus.class
+com\tradearena\model\BidStatus.class
+com\tradearena\model\AuctionMaster.class
+com\tradearena\Application.class
+com\tradearena\delegate\CheckBid.class
+com\tradearena\delegate\ProductToAuction.class
+com\tradearena\controller\AuctionController.class
+com\tradearena\controller\service\AuctionService.class
+com\tradearena\dto\ApiResponse.class
+com\tradearena\controller\service\AuctionServiceImpl.class
+com\tradearena\dto\StartAuctionDTO.class
+com\tradearena\delegate\ProductToActive.class
+com\tradearena\model\AuctionBid.class

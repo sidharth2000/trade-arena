@@ -1,4 +1,4 @@
-package com.tradearena.controller.service;
+package com.tradearena.service;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,9 +20,10 @@ public class AuctionServiceImpl implements AuctionService {
     public String startAuction(StartAuctionDTO dto) {
         Map<String, Object> variables = new HashMap<>();
         variables.put("productId", dto.getProductId());
-        variables.put("auctionEndTime", dto.getAuctionEndTime());
+        variables.put("auctionEndTime", dto.getAuctionEndTime().toString());
         variables.put("startingPrice", dto.getStartingPrice());
-        ProcessInstance instance = runtimeService.startProcessInstanceById("auction_flow", variables);
+        variables.put("sellerId",dto.getSellerId());
+        ProcessInstance instance = runtimeService.startProcessInstanceByKey("auction_flow", variables);
         return instance.getId();
     }
 }

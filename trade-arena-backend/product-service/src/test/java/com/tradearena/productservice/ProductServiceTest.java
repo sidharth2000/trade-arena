@@ -36,8 +36,8 @@ class ProductServiceTest {
     private Product sampleProduct;
 
     private static final UUID PRODUCT_ID  = UUID.randomUUID();
-    private static final UUID CATEGORY_ID = UUID.randomUUID();
-    private static final UUID SUB_CAT_ID  = UUID.randomUUID();
+    private static final Integer CATEGORY_ID = 1;
+    private static final Integer SUB_CAT_ID = 2;
 
     @BeforeEach
     void setUp() {

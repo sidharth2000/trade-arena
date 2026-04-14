@@ -2,6 +2,7 @@ package com.tradearena.productservice.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -10,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.tradearena.productservice.client.AdminServiceClient;
 import com.tradearena.productservice.dto.CreateProductRequest;
@@ -20,6 +22,7 @@ import com.tradearena.productservice.dto.RemoveProductResponse;
 import com.tradearena.productservice.exception.ProductNotFoundException;
 import com.tradearena.productservice.exception.UnauthorisedActionException;
 import com.tradearena.productservice.model.Product;
+import com.tradearena.productservice.model.ProductImage;
 import com.tradearena.productservice.model.ProductInformation;
 import com.tradearena.productservice.model.ProductStatus;
 import com.tradearena.productservice.repository.ProductRepository;
@@ -27,9 +30,9 @@ import com.tradearena.productservice.repository.ProductRepository;
 @Service
 public class ProductService {
 
-	@Autowired
-	AdminServiceClient adminClient;
-	
+    @Autowired
+    AdminServiceClient adminClient;
+
     private final ProductRepository repository;
 
     public ProductService(ProductRepository repository) {
@@ -37,7 +40,7 @@ public class ProductService {
     }
 
     public PagedResponse<ProductListingSummary> getProducts(
-            UUID categoryId, UUID subCategoryId, Long sellerId,
+            Integer categoryId, Integer subCategoryId, Long sellerId,
             ProductStatus status, int page, int size) {
         Page<ProductListingSummary> result = repository
                 .findWithFilters(categoryId, subCategoryId, sellerId, status,
@@ -51,12 +54,16 @@ public class ProductService {
     }
 
     @Transactional
-    public ProductDetailResponse createProduct(CreateProductRequest request, Long sellerId) {
+    public ProductDetailResponse createProduct(
+            CreateProductRequest request,
+            Long sellerId,
+            List<MultipartFile> images) {
+
         if (Boolean.TRUE.equals(request.getQuickBidEnabled())) {
             validateQuickBidFields(request.getQuickBidEndTime(),
                     request.getQuickBidStartingPrice());
         }
-        System.out.println("arrives");
+
         Product product = new Product();
         product.setSellerId(sellerId);
         product.setTitle(request.getTitle());
@@ -77,6 +84,7 @@ public class ProductService {
             product.setStatus(ProductStatus.ACTIVE);
         }
 
+        // Product information (dynamic form answers)
         if (request.getProductInformation() != null) {
             for (CreateProductRequest.FormAnswer fa : request.getProductInformation()) {
                 ProductInformation info = new ProductInformation();
@@ -84,6 +92,28 @@ public class ProductService {
                 info.setFormId(fa.getFormId());
                 info.setAnswer(fa.getAnswer());
                 product.getProductInformation().add(info);
+            }
+        }
+
+        // Images
+        if (images != null && !images.isEmpty()) {
+            for (int i = 0; i < images.size(); i++) {
+                MultipartFile file = images.get(i);
+                if (file == null || file.isEmpty()) continue;
+
+                try {
+                    ProductImage img = new ProductImage();
+                    img.setData(file.getBytes());
+                    img.setFilename(file.getOriginalFilename() != null
+                            ? file.getOriginalFilename() : "image_" + i);
+                    img.setMimeType(file.getContentType() != null
+                            ? file.getContentType() : "image/jpeg");
+                    img.setDisplayOrder(i);
+                    img.setIsPrimary(i == 0); // First image is primary
+                    product.addImage(img);
+                } catch (Exception e) {
+                    throw new RuntimeException("Failed to process image: " + file.getOriginalFilename(), e);
+                }
             }
         }
 
@@ -123,8 +153,7 @@ public class ProductService {
 
     private void assertOwner(Product product, Long sellerId) {
         if (!product.getSellerId().equals(sellerId)) {
-            throw new UnauthorisedActionException(
-                    "You are not the owner of this listing");
+            throw new UnauthorisedActionException("You are not the owner of this listing");
         }
     }
 
@@ -142,18 +171,17 @@ public class ProductService {
                     "quickBidEndTime must be at least 5 minutes in the future");
         }
     }
-    
-    
-    // APIS for sell page
-    
+
+    // ── Sell page APIs ──────────────────────────────────────────────────────
+
     public Map<String, Object> getCategoriesFromAdmin() {
         return adminClient.getAllCategories();
     }
-    
+
     public Map<String, Object> getSubCategories(Integer categoryId) {
         return adminClient.getSubCategories(categoryId);
     }
-    
+
     public Map<String, Object> getQuestions(Integer subCategoryId) {
         return adminClient.getQuestions(subCategoryId);
     }

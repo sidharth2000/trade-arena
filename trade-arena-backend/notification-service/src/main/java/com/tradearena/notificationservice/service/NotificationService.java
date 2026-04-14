@@ -5,6 +5,8 @@ import com.tradearena.notificationservice.dto.NotificationResponse;
 import com.tradearena.notificationservice.model.Notification;
 import com.tradearena.notificationservice.model.NotificationType;
 import com.tradearena.notificationservice.repository.NotificationRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -17,13 +19,11 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class NotificationService {
 
+    private static final Logger log = LoggerFactory.getLogger(NotificationService.class);
+
     private final NotificationRepository repository;
     private final EmailService emailService;
 
-    /**
-     * userId -> SSE emitter
-     * Thread-safe since requests can come concurrently.
-     */
     private final Map<Long, SseEmitter> emitters = new ConcurrentHashMap<>();
 
     public NotificationService(NotificationRepository repository, EmailService emailService) {
@@ -32,18 +32,34 @@ public class NotificationService {
     }
 
     public SseEmitter subscribe(Long userId) {
+        // Remove any existing emitter for this user
+        SseEmitter existing = emitters.remove(userId);
+        if (existing != null) {
+            try { existing.complete(); } catch (Exception ignored) {}
+        }
+
         SseEmitter emitter = new SseEmitter(0L); // 0 = no timeout
         emitters.put(userId, emitter);
 
-        emitter.onCompletion(() -> emitters.remove(userId));
-        emitter.onTimeout(() -> emitters.remove(userId));
-        emitter.onError(e -> emitters.remove(userId));
+        emitter.onCompletion(() -> {
+            log.debug("SSE completed for userId={}", userId);
+            emitters.remove(userId);
+        });
+        emitter.onTimeout(() -> {
+            log.debug("SSE timeout for userId={}", userId);
+            emitters.remove(userId);
+        });
+        emitter.onError(e -> {
+            log.debug("SSE error for userId={}: {}", userId, e.getMessage());
+            emitters.remove(userId);
+        });
 
-        // Send a small initial event so frontend knows it's connected
+        // Send initial connected event
         try {
             emitter.send(SseEmitter.event()
                     .name("connected")
                     .data(Map.of("userId", userId, "status", "CONNECTED")));
+            log.debug("SSE subscribed for userId={}", userId);
         } catch (IOException e) {
             emitters.remove(userId);
         }
@@ -53,24 +69,19 @@ public class NotificationService {
 
     @Transactional
     public NotificationResponse send(NotificationRequest request) {
-        // 1) Persist in DB — now correctly passing referenceId and using enum type
         Notification saved = repository.save(new Notification(
                 request.getUserId(),
                 request.getMessage(),
-                request.getType(),        // NotificationType enum (not raw String)
-                request.getReferenceId()  // Bug #2 fix: referenceId now persisted
+                request.getType(),
+                request.getReferenceId()
         ));
 
         NotificationResponse response = toResponse(saved);
 
-        // 2) Push to SSE if user is connected
         pushToSse(saved.getUserId(), response);
 
-        // 3) Send email if requested and eligible type
-// 3) Send email if requested and eligible type
         if (request.isSendEmail() && emailService.isEmailType(request.getType())) {
             if (request.getHtmlBody() != null && !request.getHtmlBody().isBlank()) {
-                // Option B — caller provided full HTML
                 String subject = buildSubject(request.getType(), request.getProductTitle());
                 emailService.sendHtmlEmail(
                         request.getTo(),
@@ -85,7 +96,6 @@ public class NotificationService {
         return response;
     }
 
-
     public List<NotificationResponse> getForUser(Long userId) {
         return repository.findByUserIdOrderByTimestampDesc(userId)
                 .stream()
@@ -98,8 +108,7 @@ public class NotificationService {
         Notification n = repository.findById(notificationId)
                 .orElseThrow(() -> new IllegalArgumentException("Notification not found: " + notificationId));
         n.setIsRead(true);
-        Notification saved = repository.save(n);
-        return toResponse(saved);
+        return toResponse(repository.save(n));
     }
 
     @Transactional
@@ -109,13 +118,20 @@ public class NotificationService {
 
     private void pushToSse(Long userId, NotificationResponse payload) {
         SseEmitter emitter = emitters.get(userId);
-        if (emitter == null) return;
+        if (emitter == null) {
+            log.debug("No SSE emitter found for userId={}, skipping push", userId);
+            return;
+        }
 
         try {
+            // Send as named event "notification" — frontend uses addEventListener("notification")
+            // Also send as default event so onmessage also fires as fallback
             emitter.send(SseEmitter.event()
                     .name("notification")
                     .data(payload));
+            log.debug("SSE push sent to userId={}", userId);
         } catch (IOException e) {
+            log.debug("SSE push failed for userId={}, removing emitter", userId);
             emitters.remove(userId);
         }
     }

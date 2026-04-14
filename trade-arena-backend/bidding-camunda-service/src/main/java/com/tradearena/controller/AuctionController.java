@@ -10,9 +10,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.tradearena.controller.service.AuctionService;
 import com.tradearena.dto.ApiResponse;
 import com.tradearena.dto.StartAuctionDTO;
+import com.tradearena.service.AuctionService;
 
 @RestController
 @RequestMapping("/api/auction")

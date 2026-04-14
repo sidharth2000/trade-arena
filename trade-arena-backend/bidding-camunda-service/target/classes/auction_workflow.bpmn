@@ -9,7 +9,7 @@
       <bpmn:incoming>Flow_0gsgwtt</bpmn:incoming>
       <bpmn:outgoing>Flow_1mu55zd</bpmn:outgoing>
       <bpmn:timerEventDefinition id="TimerEventDefinition_04fmk0e">
-        <bpmn:timeDate xsi:type="bpmn:tFormalExpression">${auction_end_time}</bpmn:timeDate>
+        <bpmn:timeDate xsi:type="bpmn:tFormalExpression">${auctionEndTime}</bpmn:timeDate>
       </bpmn:timerEventDefinition>
     </bpmn:intermediateCatchEvent>
     <bpmn:sequenceFlow id="Flow_1mu55zd" sourceRef="Event_0agpuzp" targetRef="Activity_16xgrw4" />
@@ -32,7 +32,7 @@
     </bpmn:serviceTask>
     <bpmn:sequenceFlow id="Flow_0ja8in4" sourceRef="Activity_00gj5zh" targetRef="Event_08iht8w" />
     <bpmn:sequenceFlow id="Flow_0gsgwtt" sourceRef="Activity_1x4w2v8" targetRef="Event_0agpuzp" />
-    <bpmn:serviceTask id="Activity_1x4w2v8" name="Move Product To Auction" camunda:class="com.tradearena.delegate.ProductToAuction">
+    <bpmn:serviceTask id="Activity_1x4w2v8" name="Update Product Status To Auction" camunda:class="com.tradearena.delegate.ProductToAuction">
       <bpmn:incoming>Flow_0mgknbi</bpmn:incoming>
       <bpmn:outgoing>Flow_0gsgwtt</bpmn:outgoing>
     </bpmn:serviceTask>
@@ -63,6 +63,7 @@
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_06aflri_di" bpmnElement="Activity_1x4w2v8">
         <dc:Bounds x="260" y="80" width="100" height="80" />
+        <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_0agpuzp_di" bpmnElement="Event_0agpuzp">
         <dc:Bounds x="422" y="102" width="36" height="36" />

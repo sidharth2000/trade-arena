@@ -48,9 +48,8 @@ class ProductControllerTest {
     private ProductService productService;
 
     private static final UUID PRODUCT_ID   = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
-    private static final UUID CATEGORY_ID  = UUID.fromString("550e8400-e29b-41d4-a716-446655440001");
-    private static final UUID SUB_CAT_ID   = UUID.fromString("550e8400-e29b-41d4-a716-446655440002");
-
+    private static final Integer CATEGORY_ID = 1;
+    private static final Integer SUB_CAT_ID = 2;
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private ProductDetailResponse sampleDetail() {

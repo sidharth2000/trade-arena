@@ -6,6 +6,7 @@ import com.tradearena.productservice.model.ProductStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.UUID;
 
 public class ProductListingSummary {
@@ -20,41 +21,66 @@ public class ProductListingSummary {
     private ProductStatus status;
     private ProductCondition condition;
     private Boolean quickBidEnabled;
-    private UUID primaryImageId;
+    private LocalDateTime quickBidEndTime;
+    private BigDecimal quickBidStartingPrice;
     private LocalDateTime createdAt;
+
+    // Primary image included directly so home page can show it without a second request
+    private String primaryImageData;     // base64 encoded
+    private String primaryImageMimeType; // e.g. "image/jpeg"
+    private UUID primaryImageId;
 
     public static ProductListingSummary fromEntity(Product p) {
         ProductListingSummary s = new ProductListingSummary();
-        s.id              = p.getId();
-        s.title           = p.getTitle();
-        s.description     = p.getDescription();
-        s.price           = p.getPrice();
-        s.categoryId      = p.getCategoryId();
-        s.subCategoryId   = p.getSubCategoryId();
-        s.sellerId        = p.getSellerId();
-        s.status          = p.getStatus();
-        s.condition       = p.getCondition();
-        s.quickBidEnabled = p.getQuickBidEnabled();
-        s.createdAt       = p.getCreatedAt();
+        s.id                    = p.getId();
+        s.title                 = p.getTitle();
+        s.description           = p.getDescription();
+        s.price                 = p.getPrice();
+        s.categoryId            = p.getCategoryId();
+        s.subCategoryId         = p.getSubCategoryId();
+        s.sellerId              = p.getSellerId();
+        s.status                = p.getStatus();
+        s.condition             = p.getCondition();
+        s.quickBidEnabled       = p.getQuickBidEnabled();
+        s.quickBidEndTime       = p.getQuickBidEndTime();
+        s.quickBidStartingPrice = p.getQuickBidStartingPrice();
+        s.createdAt             = p.getCreatedAt();
 
+        // Include primary image data for the listing card
         p.getImages().stream()
                 .filter(img -> Boolean.TRUE.equals(img.getIsPrimary()))
                 .findFirst()
-                .ifPresent(img -> s.primaryImageId = img.getId());
+                .ifPresentOrElse(
+                        img -> {
+                            s.primaryImageId       = img.getId();
+                            s.primaryImageMimeType = img.getMimeType();
+                            s.primaryImageData     = Base64.getEncoder().encodeToString(img.getData());
+                        },
+                        // If no primary, fall back to first image
+                        () -> p.getImages().stream().findFirst().ifPresent(img -> {
+                            s.primaryImageId       = img.getId();
+                            s.primaryImageMimeType = img.getMimeType();
+                            s.primaryImageData     = Base64.getEncoder().encodeToString(img.getData());
+                        })
+                );
 
         return s;
     }
 
-    public UUID getId()                 { return id; }
-    public String getTitle()            { return title; }
-    public String getDescription()      { return description; }
-    public BigDecimal getPrice()        { return price; }
-    public Integer getCategoryId()         { return categoryId; }
-    public Integer getSubCategoryId()      { return subCategoryId; }
-    public Long getSellerId()           { return sellerId; }
-    public ProductStatus getStatus()    { return status; }
-    public ProductCondition getCondition() { return condition; }
-    public Boolean getQuickBidEnabled() { return quickBidEnabled; }
-    public UUID getPrimaryImageId()     { return primaryImageId; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
+    public UUID getId()                     { return id; }
+    public String getTitle()                { return title; }
+    public String getDescription()          { return description; }
+    public BigDecimal getPrice()            { return price; }
+    public Integer getCategoryId()          { return categoryId; }
+    public Integer getSubCategoryId()       { return subCategoryId; }
+    public Long getSellerId()               { return sellerId; }
+    public ProductStatus getStatus()        { return status; }
+    public ProductCondition getCondition()  { return condition; }
+    public Boolean getQuickBidEnabled()     { return quickBidEnabled; }
+    public LocalDateTime getQuickBidEndTime()       { return quickBidEndTime; }
+    public BigDecimal getQuickBidStartingPrice()    { return quickBidStartingPrice; }
+    public LocalDateTime getCreatedAt()     { return createdAt; }
+    public UUID getPrimaryImageId()         { return primaryImageId; }
+    public String getPrimaryImageData()     { return primaryImageData; }
+    public String getPrimaryImageMimeType() { return primaryImageMimeType; }
 }

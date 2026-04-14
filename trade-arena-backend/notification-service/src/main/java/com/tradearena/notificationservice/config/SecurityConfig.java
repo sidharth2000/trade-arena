@@ -43,14 +43,25 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
+
+        // Allow all origins that may call this service
+        // Gateway calls it internally, but SSE is called directly from browser
         config.setAllowedOrigins(List.of(
                 "http://localhost:5173",
-                "http://localhost:3000"
+                "http://localhost:3000",
+                "http://localhost:8080"
         ));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
-        config.setExposedHeaders(List.of("Content-Type", "Cache-Control", "Connection"));
+        // ✅ Expose headers needed for SSE and normal responses
+        config.setExposedHeaders(List.of(
+                "Content-Type",
+                "Cache-Control",
+                "Connection",
+                "Authorization",
+                "X-User-Id"
+        ));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
