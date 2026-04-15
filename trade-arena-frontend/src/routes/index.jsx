@@ -9,6 +9,8 @@ import SellProduct from '../pages/SellProduct'
 import ChatPage from '../pages/ChatPage'
 import ProductsPage from '../pages/ProductsPage'
 import ProductDetailPage from '../pages/ProductDetailPage'
+import Profile from '../pages/Profile'
+import Wishlist from '../pages/Wishlist'
 
 import CategoryConfiguration from '../pages/admin/CategoryConfiguration'
 
@@ -34,6 +36,9 @@ const router = createBrowserRouter([
             { path: 'products/:id', element: <ProductDetailPage /> },
             { path: 'sell', element: <SellProduct /> },
             { path: 'chat', element: <ChatPage /> },
+
+            { path: 'profile', element: <Profile /> },
+            { path: 'wishlist', element: <Wishlist /> },
         ],
     },
     {
