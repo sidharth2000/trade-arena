@@ -8,7 +8,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/tradearena_chat
     username: postgres
-    password: kavya
+    password: root
     driver-class-name: org.postgresql.Driver
 
   jpa:
