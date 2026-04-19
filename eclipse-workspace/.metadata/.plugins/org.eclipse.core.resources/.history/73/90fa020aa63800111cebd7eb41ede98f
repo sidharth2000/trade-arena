@@ -1,0 +1,37 @@
+package com.tradearena.delegate;
+
+import java.util.UUID;
+
+import org.camunda.bpm.engine.delegate.DelegateExecution;
+import org.camunda.bpm.engine.delegate.JavaDelegate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import com.tradearena.repository.AuctionBidRepository;
+
+@Component
+public class CheckBid implements JavaDelegate {
+
+    @Autowired
+    private AuctionBidRepository bidRepository;
+
+    @Override
+    public void execute(DelegateExecution execution) {
+
+        // 1. Get auctionId from process
+        Object auctionObj = execution.getVariable("auctionId");
+
+        if (auctionObj == null) {
+            throw new RuntimeException("auctionId is missing");
+        }
+
+        UUID auctionId = UUID.fromString(auctionObj.toString());
+
+        // 2. Count bids
+        int bidderCount = bidRepository.findByAuction_Id(auctionId).size();
+        // 3. Set variable back to Camunda
+        execution.setVariable("bidderCount", bidderCount);
+
+        System.out.println("Bidder count = " + bidderCount);
+    }
+}

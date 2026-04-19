@@ -1,0 +1,13 @@
+package com.tradearena.model;
+
+
+public enum BidStatus {
+ ACTIVE,           // Normal standing bid
+ WINNING,          // Currently highest bid after auction ends
+ APPROVED,         // Seller approved this bid — awaiting payment
+ PAID,             // Buyer paid — transaction complete
+ PAYMENT_FAILED,   // 24hr window expired, buyer didn't pay
+ REJECTED,         // Seller rejected this bid explicitly
+ OUTBID,           // Another bid came in higher
+ SKIPPED           // Was offered but payment failed by a higher bidder — then this one offered
+}

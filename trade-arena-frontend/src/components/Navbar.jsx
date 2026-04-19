@@ -11,17 +11,18 @@ import { useThemeToggle } from '../context/ThemeContext'
 import { notificationApi } from '../api/NotificationApi'
 import { useAuth } from '../hooks/useAuth'
 import styles from './Navbar.module.css'
+import { Package } from 'lucide-react'
 
 const TYPE_COLORS = {
-  OUTBID:             '#f59e0b',
-  AUCTION_WIN:        '#16a34a',
-  PAYMENT_REMINDER:   '#ea580c',
-  PAYMENT_SUCCESS:    '#16a34a',
+  OUTBID: '#f59e0b',
+  AUCTION_WIN: '#16a34a',
+  PAYMENT_REMINDER: '#ea580c',
+  PAYMENT_SUCCESS: '#16a34a',
   ACCOUNT_RESTRICTED: '#dc2626',
-  FALLBACK_OFFER:     '#2563eb',
-  BID_PLACED:         '#7c3aed',
-  NEW_LISTING:        '#2874f0',
-  AUCTION_ENDED:      '#64748b',
+  FALLBACK_OFFER: '#2563eb',
+  BID_PLACED: '#7c3aed',
+  NEW_LISTING: '#2874f0',
+  AUCTION_ENDED: '#64748b',
 }
 
 // The backend returns isRead (not read) — handle both just in case
@@ -222,6 +223,14 @@ export default function Navbar() {
                   <MessageCircle size={20} color="#fff" />
                 </IconButton>
 
+                <Button
+                  className={styles.myListingsBtn}
+                  startIcon={<Package size={14} />}
+                  onClick={() => navigate('/my-listings')}
+                >
+                  My Listings
+                </Button>
+
                 <Button className={styles.sellBtn} startIcon={<Tag size={14} />}
                   onClick={() => navigate('/sell')}>
                   Sell
@@ -239,6 +248,7 @@ export default function Navbar() {
                   style={{ color: navBg }}>
                   Login
                 </Button>
+                
                 <Button className={styles.sellBtn} startIcon={<Tag size={14} />}
                   onClick={() => navigate('/sell')}>
                   Sell

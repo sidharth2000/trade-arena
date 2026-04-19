@@ -157,6 +157,7 @@ public class AuthServiceImpl implements AuthService {
 	    payload.put("token", "Bearer " + token);
 	    payload.put("email", user.getEmail());
 	    payload.put("role", user.getRole());
+	    payload.put("id",user.getUserId());	
 
 	    return ResponseEntity.ok(new ApiResponse("Login successful", payload));
 	}

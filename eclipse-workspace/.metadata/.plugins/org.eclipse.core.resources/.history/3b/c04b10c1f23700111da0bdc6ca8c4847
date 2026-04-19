@@ -1,0 +1,5 @@
+package com.tradearena.repostiory;
+
+public interface AuctionRepository {
+
+}

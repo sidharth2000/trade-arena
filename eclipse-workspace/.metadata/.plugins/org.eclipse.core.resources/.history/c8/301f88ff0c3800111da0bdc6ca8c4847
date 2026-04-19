@@ -1,0 +1,7 @@
+package com.tradearena.delegate;
+
+import org.camunda.bpm.engine.delegate.JavaDelegate;
+
+public class NotifySellerApproval implements JavaDelegate{
+
+}

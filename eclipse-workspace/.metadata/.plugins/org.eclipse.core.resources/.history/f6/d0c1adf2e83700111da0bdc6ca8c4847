@@ -1,0 +1,46 @@
+server:
+  port: 8086
+
+
+eureka:
+  client:
+    enabled: true
+    fetch-registry: true
+    register-with-eureka: true
+    initial-instance-info-replication-interval-seconds: 10
+    registry-fetch-interval-seconds: 10
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
+
+# Prevent Camunda's context from blocking Eureka health checks
+management:
+  health:
+    eureka:
+      enabled: false
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/tradearena_camunda
+    username: postgres
+    password: root
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+camunda:
+  bpm:
+    admin-user:
+      id: admin
+      password: admin
+    database:
+      type: postgres
+      schema-update: true

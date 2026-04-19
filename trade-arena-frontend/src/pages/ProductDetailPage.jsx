@@ -3,17 +3,20 @@ import { useParams, useNavigate } from 'react-router-dom'
 import {
   Box, Container, Grid, Typography, Button, Chip, Divider,
   Paper, Skeleton, Alert, Breadcrumbs, Link, IconButton,
-  Table, TableBody, TableRow, TableCell
+  Table, TableBody, TableRow, TableCell,
+  Dialog, DialogTitle, DialogContent, DialogActions,
+  TextField, InputAdornment, CircularProgress
 } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import {
   ChevronRight, ChevronLeft, Package, Shield, RefreshCw,
   Truck, MessageCircle, Share2, Heart, Clock, Gavel,
-  Timer, Tag, ArrowLeft, Star
+  Timer, Tag, ArrowLeft, Star, X, CheckCircle, AlertCircle
 } from 'lucide-react'
 import { productApi } from '../api/ProductApi'
 import { useAuth } from '../hooks/useAuth'
 import styles from './ProductDetailPage.module.css'
+import { auctionApi } from '../api/AuctionApi'
 
 const CONDITION_META = {
   NEW:         { color: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0' },
@@ -75,6 +78,207 @@ function CountdownTimer({ endTime }) {
   )
 }
 
+/* ── Bid Modal ── */
+function BidModal({ open, onClose, product, navBg }) {
+  const startingPrice = product?.quickBidStartingPrice ?? product?.price ?? 0
+  const [amount, setAmount] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [apiError, setApiError] = useState('')
+  const [success, setSuccess] = useState(false)
+
+  const numAmount = parseFloat(amount)
+  const isValidNumber = !isNaN(numAmount) && amount.trim() !== ''
+  const isHighEnough = isValidNumber && numAmount > startingPrice
+  const canConfirm = isHighEnough && !submitting
+
+  const handleClose = () => {
+    if (submitting) return
+    setAmount('')
+    setApiError('')
+    setSuccess(false)
+    onClose()
+  }
+
+  const handleConfirm = async () => {
+  if (!canConfirm) return
+  setApiError('')
+  setSubmitting(true)
+
+  try {
+    const stored = localStorage.getItem('user')
+    const userObj = stored ? JSON.parse(stored) : null
+    const bidderId = userObj?.id
+
+    if (!bidderId) {
+      setApiError('Could not identify bidder. Please log in again.')
+      return
+    }
+
+    await auctionApi.placeBid({
+      productId: product.id,
+      bidderId,
+      amount: numAmount,
+    })
+
+    setSuccess(true)
+  } catch (err) {
+    setApiError(err.message || 'Something went wrong. Please try again.')
+  } finally {
+    setSubmitting(false)
+  }
+}
+
+  // validation message
+  let validationNode = null
+  if (success) {
+    validationNode = (
+      <Box sx={{
+        display: 'flex', alignItems: 'center', gap: 1,
+        p: 1.25, borderRadius: 1.5, background: '#f0fdf4', mb: 2
+      }}>
+        <CheckCircle size={16} color="#16a34a" />
+        <Typography variant="body2" color="#16a34a" fontWeight={600}>
+          Bid placed successfully!
+        </Typography>
+      </Box>
+    )
+  } else if (isValidNumber && !isHighEnough) {
+    validationNode = (
+      <Box sx={{
+        display: 'flex', alignItems: 'center', gap: 1,
+        p: 1.25, borderRadius: 1.5, background: '#fff7ed', mb: 2
+      }}>
+        <AlertCircle size={16} color="#d97706" />
+        <Typography variant="body2" color="#d97706" fontWeight={600}>
+          Bid must be higher than ₹{Number(startingPrice).toLocaleString('en-IN')}
+        </Typography>
+      </Box>
+    )
+  } else if (isHighEnough) {
+    validationNode = (
+      <Box sx={{
+        display: 'flex', alignItems: 'center', gap: 1,
+        p: 1.25, borderRadius: 1.5, background: '#f0fdf4', mb: 2
+      }}>
+        <CheckCircle size={16} color="#16a34a" />
+        <Typography variant="body2" color="#16a34a" fontWeight={600}>
+          Your bid is higher than the starting price
+        </Typography>
+      </Box>
+    )
+  }
+
+  return (
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      maxWidth="xs"
+      fullWidth
+      PaperProps={{ sx: { borderRadius: 3, p: 0.5 } }}
+    >
+      {/* Header */}
+      <DialogTitle sx={{ pb: 0.5, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+        <Box>
+          <Typography fontWeight={700} fontSize={18}>Place a bid</Typography>
+          <Typography variant="body2" color="text.secondary" mt={0.25}>
+            Starting price: ₹{Number(startingPrice).toLocaleString('en-IN')}
+          </Typography>
+        </Box>
+        <IconButton size="small" onClick={handleClose} sx={{ mt: -0.5, mr: -0.5 }}>
+          <X size={16} />
+        </IconButton>
+      </DialogTitle>
+
+      <DialogContent sx={{ pt: 2.5 }}>
+        <Typography variant="body2" color="text.secondary" mb={0.75} fontWeight={600}>
+          Your bid amount
+        </Typography>
+
+        <TextField
+          fullWidth
+          type="number"
+          placeholder={`Min. ₹${Number(startingPrice + 1).toLocaleString('en-IN')}`}
+          value={amount}
+          onChange={e => { setAmount(e.target.value); setApiError(''); setSuccess(false) }}
+          disabled={submitting || success}
+          inputProps={{ min: startingPrice + 0.01, step: 0.5 }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Typography fontWeight={600} color="text.secondary">₹</Typography>
+              </InputAdornment>
+            ),
+          }}
+          sx={{
+            mb: 1.5,
+            '& .MuiOutlinedInput-root': {
+              borderRadius: 2,
+              ...(isHighEnough && !success && {
+                '& fieldset': { borderColor: '#16a34a' },
+                '&:hover fieldset': { borderColor: '#16a34a' },
+              }),
+              ...(isValidNumber && !isHighEnough && {
+                '& fieldset': { borderColor: '#d97706' },
+                '&:hover fieldset': { borderColor: '#d97706' },
+              }),
+            }
+          }}
+        />
+
+        {validationNode}
+
+        {apiError && (
+          <Box sx={{
+            display: 'flex', alignItems: 'center', gap: 1,
+            p: 1.25, borderRadius: 1.5, background: '#fff1f2', mb: 1
+          }}>
+            <AlertCircle size={16} color="#dc2626" />
+            <Typography variant="body2" color="#dc2626" fontWeight={600}>
+              {apiError}
+            </Typography>
+          </Box>
+        )}
+      </DialogContent>
+
+      <DialogActions sx={{ px: 3, pb: 2.5, gap: 1 }}>
+        {success ? (
+          <Button
+            fullWidth variant="contained"
+            onClick={handleClose}
+            sx={{ borderRadius: 2, py: 1.25, fontWeight: 700, background: '#16a34a', '&:hover': { background: '#15803d' } }}
+          >
+            Done
+          </Button>
+        ) : (
+          <>
+            <Button
+              variant="outlined" onClick={handleClose}
+              disabled={submitting}
+              sx={{ flex: 1, borderRadius: 2, py: 1.25, fontWeight: 700, textTransform: 'none' }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              disabled={!canConfirm}
+              onClick={handleConfirm}
+              startIcon={submitting ? <CircularProgress size={15} color="inherit" /> : <Gavel size={15} />}
+              sx={{
+                flex: 1, borderRadius: 2, py: 1.25, fontWeight: 700, textTransform: 'none',
+                background: navBg,
+                '&:hover': { background: '#1a5dc8' },
+                '&:disabled': { background: '#c7d2e8', color: '#fff' }
+              }}
+            >
+              {submitting ? 'Placing…' : 'Confirm bid'}
+            </Button>
+          </>
+        )}
+      </DialogActions>
+    </Dialog>
+  )
+}
+
 function PageSkeleton() {
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>
@@ -113,13 +317,24 @@ export default function ProductDetailPage() {
   const [activeImg, setActiveImg] = useState(0)
   const [wishlisted, setWishlisted] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [bidModalOpen, setBidModalOpen] = useState(false)
 
   useEffect(() => {
-    setLoading(true); setError('')
-    productApi.getProductById(id)
-      .then(setProduct)
-      .catch(() => setError('Failed to load product. Please try again.'))
-      .finally(() => setLoading(false))
+    let cancelled = false
+    const fetchProduct = async () => {
+      setLoading(true)
+      setError('')
+      try {
+        const data = await productApi.getProductById(id)
+        if (!cancelled) setProduct(data)
+      } catch {
+        if (!cancelled) setError('Failed to load product. Please try again.')
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    fetchProduct()
+    return () => { cancelled = true }
   }, [id])
 
   if (loading) return <PageSkeleton />
@@ -149,6 +364,14 @@ export default function ProductDetailPage() {
 
   return (
     <Box sx={{ background: theme.palette.background.default, minHeight: '100vh', pb: 8 }}>
+
+      {/* Bid Modal */}
+      <BidModal
+        open={bidModalOpen}
+        onClose={() => setBidModalOpen(false)}
+        product={product}
+        navBg={navBg}
+      />
 
       {/* ── Breadcrumb bar ── */}
       <Box sx={{
@@ -377,7 +600,10 @@ export default function ProductDetailPage() {
             {/* Action buttons */}
             <Box sx={{ display: 'flex', gap: 1.5, mb: 3, flexWrap: 'wrap' }}>
               {isAuction ? (
-                <Button variant="contained" size="large" startIcon={<Gavel size={17} />}
+                <Button
+                  variant="contained" size="large"
+                  startIcon={<Gavel size={17} />}
+                  onClick={() => setBidModalOpen(true)}
                   sx={{
                     flex: 1, minWidth: 148, py: 1.5, fontWeight: 700, fontSize: 15,
                     borderRadius: 2, background: navBg,

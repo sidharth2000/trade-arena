@@ -1,0 +1,11 @@
+package com.tradearena.service;
+
+import com.tradearena.dto.ApiResponse;
+import com.tradearena.dto.PlaceBidRequest;
+import com.tradearena.dto.StartAuctionDTO;
+
+public interface AuctionService {
+    String startAuction(StartAuctionDTO dto);
+
+	ApiResponse placeBid(PlaceBidRequest request);
+}	

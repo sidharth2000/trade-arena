@@ -1,6 +1,6 @@
 // All product calls go DIRECTLY to port 8083
 // Reason: gateway + product service both add CORS headers causing double header issue
-const PRODUCT_BASE = 'http://localhost:8083/api/products'
+const PRODUCT_BASE = 'http://localhost:8080/api/products'
 
 function authHeaders() {
   const token = localStorage.getItem('token')

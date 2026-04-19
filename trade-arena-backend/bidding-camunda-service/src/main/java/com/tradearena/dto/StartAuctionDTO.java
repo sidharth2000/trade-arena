@@ -9,6 +9,7 @@ public class StartAuctionDTO {
     private LocalDateTime auctionEndTime;
     private Double startingPrice;
     private Integer sellerId;
+    private String sellerEmail;
 
     public Integer getSellerId() {
 		return sellerId;
@@ -49,4 +50,14 @@ public class StartAuctionDTO {
     public void setStartingPrice(Double startingPrice) {
         this.startingPrice = startingPrice;
     }
+
+	public String getSellerEmail() {
+		return sellerEmail;
+	}
+
+	public void setSellerEmail(String sellerEmail) {
+		this.sellerEmail = sellerEmail;
+	}
+    
+    
 }

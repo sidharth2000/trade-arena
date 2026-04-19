@@ -30,14 +30,14 @@ export default function Login() {
       const res = await authApi.login({ email, password })
 
       if (res.payload) {
-        const { token, email: userEmail, role } = res.payload
+        const { token, email: userEmail, role, id } = res.payload
 
         const cleanToken = token.replace('Bearer ', '')
 
         localStorage.setItem('token', cleanToken)
         localStorage.setItem(
           'user',
-          JSON.stringify({ email: userEmail, role })
+          JSON.stringify({ email: userEmail, role, id })
         )
 
         if (role === 'ADMIN') {

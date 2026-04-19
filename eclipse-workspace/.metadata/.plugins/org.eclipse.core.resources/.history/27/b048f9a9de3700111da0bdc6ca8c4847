@@ -1,0 +1,5 @@
+package com.tradearena.controller;
+
+public class AuctionController {
+
+}

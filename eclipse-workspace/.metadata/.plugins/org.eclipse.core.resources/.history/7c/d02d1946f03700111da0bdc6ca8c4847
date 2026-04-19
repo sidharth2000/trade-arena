@@ -1,0 +1,70 @@
+package com.tradearena.delegate;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.camunda.bpm.engine.delegate.DelegateExecution;
+import org.camunda.bpm.engine.delegate.JavaDelegate;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
+
+@Component
+public class ProductToAuction implements JavaDelegate {
+
+    private RestTemplate restTemplate;
+
+    @Value("${services.product}")
+    private String productServiceBaseUrl;
+
+    @Override
+    public void execute(DelegateExecution execution) {
+
+        Object productObj = execution.getVariable("productId");
+        Object endTimeObj = execution.getVariable("auctionEndTime");
+        Object priceObj = execution.getVariable("startingPrice");
+
+        if (productObj == null || endTimeObj == null || priceObj == null) {
+            throw new RuntimeException("Required variables missing");
+        }
+
+        String productId = productObj.toString();
+
+        // ✅ Time handling
+        LocalDateTime auctionStartTime = LocalDateTime.now();
+
+        LocalDateTime auctionEndTime;
+        if (endTimeObj instanceof LocalDateTime) {
+            auctionEndTime = (LocalDateTime) endTimeObj;
+        } else {
+            auctionEndTime = LocalDateTime.parse(endTimeObj.toString());
+        }
+
+        // ✅ Price handling
+        Double startingPrice;
+        if (priceObj instanceof Double) {
+            startingPrice = (Double) priceObj;
+        } else {
+            startingPrice = Double.valueOf(priceObj.toString());
+        }
+
+        // ✅ URL
+        String url = productServiceBaseUrl + "/api/productcamunda/update-status";
+
+        // ✅ Payload
+        Map<String, Object> request = new HashMap<>();
+        request.put("productId", productId);
+        request.put("status", "AUCTION");
+        request.put("auctionStartTime", auctionStartTime);
+        request.put("auctionEndTime", auctionEndTime);
+        request.put("startingPrice", startingPrice);
+
+        // ✅ API call
+        ResponseEntity<String> response =
+                restTemplate.postForEntity(url, request, String.class);
+
+        System.out.println("Auction started. Response: " + response.getBody());
+    }
+}

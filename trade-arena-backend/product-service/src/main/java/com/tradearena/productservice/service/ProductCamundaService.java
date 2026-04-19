@@ -28,6 +28,7 @@ public class ProductCamundaService {
         product.setQuickBidEndTime(request.getAuctionEndTime());
         product.setQuickBidStartingPrice(request.getStartingPrice());
 
+
         productRepository.save(product);
     }
 

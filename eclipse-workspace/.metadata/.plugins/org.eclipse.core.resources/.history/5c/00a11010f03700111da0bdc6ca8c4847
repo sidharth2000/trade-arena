@@ -1,0 +1,5 @@
+package com.tradearena.productservice.controller;
+
+public class ProductCamundaController {
+
+}

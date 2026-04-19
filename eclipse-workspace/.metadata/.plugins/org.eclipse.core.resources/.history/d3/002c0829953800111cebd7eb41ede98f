@@ -1,0 +1,163 @@
+package com.tradearena.authservice.service;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Random;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.tradearena.authservice.dto.ApiResponse;
+import com.tradearena.authservice.dto.LoginRequest;
+import com.tradearena.authservice.dto.RegisterRequest;
+import com.tradearena.authservice.dto.VerifyOtpRequest;
+import com.tradearena.authservice.model.AuthProvider;
+import com.tradearena.authservice.model.Role;
+import com.tradearena.authservice.model.User;
+import com.tradearena.authservice.model.VerificationToken;
+import com.tradearena.authservice.repository.UserRepository;
+import com.tradearena.authservice.repository.VerificationTokenRepository;
+import com.tradearena.authservice.util.JwtUtil;
+
+@Service
+public class AuthServiceImpl implements AuthService {
+
+	@Autowired
+	private UserRepository userRepository;
+
+	@Autowired
+	private VerificationTokenRepository verificationTokenRepository;
+
+	@Autowired
+	private EmailService emailService;
+
+	@Autowired
+	private BCryptPasswordEncoder passwordEncoder;
+	
+	@Autowired
+	JwtUtil jwtUtil;
+
+	@Override
+	@Transactional
+	public ResponseEntity<ApiResponse> register(RegisterRequest request) {
+
+		User user = userRepository.findByEmail(request.getEmail()).orElse(null);
+
+		if (user != null && Boolean.TRUE.equals(user.getIsVerified())) {
+			return ResponseEntity.status(HttpStatus.CONFLICT).body(new ApiResponse("Email already registered", null));
+		}
+
+		if (user == null) {
+			user = new User();
+			user.setFirstName(request.getFirstName());
+			user.setLastName(request.getLastName());
+			user.setEmail(request.getEmail());
+			user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+			user.setRole(Role.USER);
+			user.setProvider(AuthProvider.LOCAL);
+			user.setIsVerified(false);
+
+			user = userRepository.save(user);
+		}
+
+		VerificationToken token = verificationTokenRepository.findByUser(user)
+		        .orElse(null);
+
+		String otp = String.format("%04d", new Random().nextInt(10000));
+		
+		if (token != null) {
+		    token.setToken(otp);
+		    token.setExpiryTime(LocalDateTime.now().plusMinutes(10));
+		    verificationTokenRepository.save(token);
+		} else {
+		    VerificationToken newToken = new VerificationToken(otp, user);
+		    verificationTokenRepository.save(newToken);
+		}
+
+		emailService.sendOtpEmail(user.getEmail(), otp);
+
+		return ResponseEntity.ok(new ApiResponse("OTP sent to your email.", Map.of("email", user.getEmail())));
+	}
+
+	@Override
+	@Transactional
+	public ResponseEntity<ApiResponse> verifyOtp(VerifyOtpRequest request) {
+
+		User user = userRepository.findByEmail(request.getEmail()).orElse(null);
+
+		if (user == null) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse("User not found", null));
+		}
+
+		VerificationToken verificationToken = verificationTokenRepository.findByUser(user).orElse(null);
+
+		if (verificationToken == null) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(new ApiResponse("OTP not found. Please register again.", null));
+		}
+
+		if (verificationToken.isExpired()) {
+			verificationTokenRepository.delete(verificationToken);
+			return ResponseEntity.status(HttpStatus.GONE)
+					.body(new ApiResponse("OTP has expired. Please register again.", null));
+		}
+
+		if (!verificationToken.getToken().equals(request.getOtp())) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("Invalid OTP", null));
+		}
+
+		user.setIsVerified(true);
+		userRepository.save(user);
+
+		verificationTokenRepository.delete(verificationToken);
+
+		return ResponseEntity.ok(new ApiResponse("Email verified successfully. You can now log in.", null));
+	}
+	
+	
+	@Override
+	public ResponseEntity<ApiResponse> login(LoginRequest request) {
+
+	    // 1. Check if user exists
+	    Optional<User> optionalUser = userRepository.findByEmail(request.getEmail());
+	    if (optionalUser.isEmpty()) {
+	    	return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+	                .body(new ApiResponse("Invalid email or password", null));
+	    }
+
+	    User user = optionalUser.get();
+
+	    // 2. Check if account is verified
+	    if (!user.getIsVerified()) {
+	    	return ResponseEntity.status(HttpStatus.FORBIDDEN)
+	                .body(new ApiResponse("Account not verified. Please complete registeration first.", null));
+	    }
+
+	    // 3. Validate password
+	    if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+	    	return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+	                .body(new ApiResponse("Invalid email or password", null));
+	    }
+
+	    // 4. Generate JWT token with all claims
+	    String token = jwtUtil.generateToken(
+	            user.getUserId().toString(),
+	            user.getEmail(),
+	            user.getRole().toString()
+	    );
+
+	    // 5. Return token in response
+	    Map<String, Object> payload = new HashMap<>();
+	    payload.put("token", "Bearer " + token);
+	    payload.put("email", user.getEmail());
+	    payload.put("role", user.getRole());
+
+	    return ResponseEntity.ok(new ApiResponse("Login successful", payload));
+	}
+}

@@ -1,0 +1,5 @@
+package com.tradearena.controller.service;
+
+public class AuctionServiceImpl {
+
+}

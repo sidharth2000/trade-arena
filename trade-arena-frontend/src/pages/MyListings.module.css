@@ -1,0 +1,185 @@
+/* ───────── BASE LIST CARD ───────── */
+.myListingCard {
+  display: flex;
+  align-items: center;
+  padding: 12px !important;
+  margin-bottom: 12px;
+
+  border-radius: 12px !important;
+  background: #fff;
+
+  transition: box-shadow 0.2s ease;
+}
+
+/* subtle hover (no lift like buyer cards) */
+.myListingCard:hover {
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+
+/* ───────── IMAGE ───────── */
+.image {
+  width: 72px;
+  height: 72px;
+  border-radius: 8px;
+  object-fit: cover;
+  margin-right: 14px;
+  background: #f5f5f5;
+}
+
+
+/* ───────── CONTENT ───────── */
+.content {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.price {
+  font-size: 13px;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.meta {
+  font-size: 11px;
+  color: #777;
+  margin-top: 2px;
+}
+
+
+/* ───────── STATUS BADGE ───────── */
+.status {
+  margin-top: 4px !important;
+  font-size: 10px !important;
+  height: 20px !important;
+  font-weight: 700 !important;
+}
+
+
+/* ───────── LEFT STATUS BORDER ───────── */
+.statusACTIVE {
+  border-left: 4px solid #16a34a;
+}
+
+.statusAUCTION {
+  border-left: 4px solid #2563eb;
+}
+
+.statusSOLD {
+  border-left: 4px solid #6b7280;
+}
+
+.statusEXPIRED {
+  border-left: 4px solid #dc2626;
+}
+
+
+/* ───────── ACTION BUTTONS ───────── */
+.actions {
+  display: flex;
+  gap: 6px;
+  margin-left: 10px;
+}
+
+.actionBtn {
+  min-width: 32px !important;
+  height: 32px !important;
+  padding: 0 !important;
+  border-radius: 6px !important;
+}
+
+/* hover states */
+.actionBtn:hover {
+  background: rgba(0, 0, 0, 0.06) !important;
+}
+
+.deleteBtn:hover {
+  background: rgba(220, 38, 38, 0.1) !important;
+}
+
+
+/* ───────── HEADER ───────── */
+.header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.headerTitle {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.headerActions {
+  margin-left: auto;
+}
+
+
+/* ───────── STATS CARDS ───────── */
+.statCard {
+  border-radius: 12px !important;
+  padding: 12px;
+  background: #fff;
+  text-align: center;
+}
+
+.statLabel {
+  font-size: 12px;
+  color: #777;
+}
+
+.statValue {
+  font-size: 18px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+
+/* ───────── FILTER TABS ───────── */
+.tabs {
+  margin-bottom: 16px;
+}
+
+.tab {
+  text-transform: none !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
+
+
+/* ───────── EMPTY STATE ───────── */
+.empty {
+  text-align: center;
+  padding: 60px 0;
+  color: #777;
+}
+
+
+/* ───────── RESPONSIVE ───────── */
+@media (max-width: 600px) {
+  .myListingCard {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .image {
+    width: 100%;
+    height: 160px;
+    margin-bottom: 10px;
+  }
+
+  .actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}

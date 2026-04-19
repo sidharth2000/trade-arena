@@ -11,6 +11,9 @@ import ProductsPage from '../pages/ProductsPage'
 import ProductDetailPage from '../pages/ProductDetailPage'
 
 import CategoryConfiguration from '../pages/admin/CategoryConfiguration'
+import MyListings from '../pages/MyListings'
+import SellerProductDetailPage from '../pages/SellerProductDetailPage'
+import AdminHome from '../pages/admin/AdminHome'
 
 const router = createBrowserRouter([
     {
@@ -33,16 +36,18 @@ const router = createBrowserRouter([
             { path: 'products', element: <ProductsPage /> },
             { path: 'products/:id', element: <ProductDetailPage /> },
             { path: 'sell', element: <SellProduct /> },
+            { path: 'my-listings', element: <MyListings /> },
             { path: 'chat', element: <ChatPage /> },
+            { path: 'my-listings/:id', element: <SellerProductDetailPage /> },
         ],
     },
     {
         path: '/admin',
         element: <AdminLayout />,
         children: [
-            { index: true, element: <Navigate to="/admin/dashboard" replace /> },
-            { path: 'dashboard', element: <div>Dashboard</div> },
-            { path: 'category-configuration', element: <CategoryConfiguration /> },
+            { index: true, element: <Navigate to="/admin/home" replace /> },
+            { path: 'home', element: <AdminHome/> },
+            { path: 'category-management', element: <CategoryConfiguration /> },
         ],
     },
     {

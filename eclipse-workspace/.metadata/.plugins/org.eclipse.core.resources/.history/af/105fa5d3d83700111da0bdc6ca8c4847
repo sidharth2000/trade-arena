@@ -1,0 +1,5 @@
+package com.tradearena.model;
+
+public enum AuctionStatus {
+
+}

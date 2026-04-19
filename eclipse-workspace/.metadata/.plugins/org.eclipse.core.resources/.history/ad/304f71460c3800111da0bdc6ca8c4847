@@ -1,0 +1,100 @@
+package com.tradearena.service;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.camunda.bpm.engine.RuntimeService;
+import org.camunda.bpm.engine.runtime.ProcessInstance;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.tradearena.dto.ApiResponse;
+import com.tradearena.dto.PlaceBidRequest;
+import com.tradearena.dto.StartAuctionDTO;
+import com.tradearena.model.AuctionBid;
+import com.tradearena.model.AuctionMaster;
+import com.tradearena.model.AuctionStatus;
+import com.tradearena.model.BidStatus;
+import com.tradearena.repository.AuctionBidRepository;
+import com.tradearena.repository.AuctionRepository;
+
+@Service
+public class AuctionServiceImpl implements AuctionService {
+	
+	@Autowired
+    private RuntimeService runtimeService;
+
+    @Autowired
+    private AuctionRepository auctionRepository;
+	
+
+    @Autowired
+    private AuctionBidRepository bidRepository;
+
+    @Override
+    public String startAuction(StartAuctionDTO dto) {
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("productId", dto.getProductId());
+        variables.put("auctionEndTime", dto.getAuctionEndTime().toString());
+        variables.put("startingPrice", dto.getStartingPrice());
+        variables.put("sellerId",dto.getSellerId());
+        ProcessInstance instance = runtimeService.startProcessInstanceByKey("auction_flow", variables);
+        return instance.getId();
+    }
+    
+    @Override
+    public ApiResponse placeBid(PlaceBidRequest request) {
+
+        // 1. Get active auction
+        AuctionMaster auction = auctionRepository
+                .findByProductIdAndStatus(request.getProductId(), AuctionStatus.ACTIVE)
+                .orElseThrow(() -> new RuntimeException("No active auction found"));
+
+        // 2. Check time validity
+        if (auction.getEndTime().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Auction already ended");
+        }
+
+        // 3. Get highest bid
+        List<AuctionBid> bids = bidRepository.findByAuctionOrderByAmountDesc(auction);
+        AuctionBid highestBid = bids.isEmpty() ? null : bids.get(0);
+
+        // 4. Validate bid
+        if (highestBid != null) {
+
+            if (request.getAmount().compareTo(highestBid.getAmount()) <= 0) {
+                throw new RuntimeException("Bid must be higher than current highest bid");
+            }
+
+            // mark previous as OUTBID
+            highestBid.setStatus(BidStatus.OUTBID);
+            bidRepository.save(highestBid);
+
+        } else {
+
+            if (request.getAmount().compareTo(auction.getStartingPrice()) < 0) {
+                throw new RuntimeException("Bid must be >= starting price");
+            }
+        }
+
+        // 5. Create new bid
+        AuctionBid newBid = new AuctionBid();
+        newBid.setAuction(auction);
+        newBid.setBidderId(request.getBidderId());
+        newBid.setAmount(request.getAmount());
+        newBid.setStatus(BidStatus.ACTIVE);
+
+        bidRepository.save(newBid);
+
+        // 6. Response payload
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("bidId", newBid.getId());
+        payload.put("auctionId", auction.getId());
+        payload.put("amount", newBid.getAmount());
+        payload.put("status", newBid.getStatus());
+
+        return new ApiResponse("Bid placed successfully", payload);
+    }
+}

@@ -1,0 +1,20 @@
+package com.tradearena;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.cloud.openfeign.EnableFeignClients;
+
+@SpringBootApplication
+public class Application {
+
+    public static void main(String[] args) {
+        System.setProperty("eureka.client.initial-instance-info-replication-interval-seconds", "10");
+        System.setProperty("eureka.client.eureka-service-url-poll-interval-seconds", "10");
+
+        SpringApplication app = new SpringApplication(Application.class);
+        app.setLazyInitialization(true);
+        app.setAdditionalProfiles("default");
+        app.run(args);
+    }
+}

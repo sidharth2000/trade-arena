@@ -1,7 +1,20 @@
 package com.tradearena.service;
 
+import java.util.List;
+import java.util.UUID;
+
+import com.tradearena.dto.ApiResponse;
+import com.tradearena.dto.AuctionDetailResponse;
+import com.tradearena.dto.BidResponseDTO;
+import com.tradearena.dto.PlaceBidRequest;
 import com.tradearena.dto.StartAuctionDTO;
 
 public interface AuctionService {
     String startAuction(StartAuctionDTO dto);
+
+	ApiResponse placeBid(PlaceBidRequest request);
+	
+	List<BidResponseDTO> getBidsByProductId(UUID productId);
+	
+	AuctionDetailResponse getAuctionByProductId(UUID productId);
 }	
