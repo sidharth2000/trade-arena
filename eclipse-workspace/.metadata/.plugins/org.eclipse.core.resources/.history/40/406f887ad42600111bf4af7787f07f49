@@ -1,5 +1,0 @@
-package com.tradearena.authservice.service;
-
-public class EmailService {
-
-}

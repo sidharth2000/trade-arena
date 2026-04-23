@@ -1,5 +1,0 @@
-package com.tradearena.authservice.config;
-
-public class CorsConfig {
-
-}

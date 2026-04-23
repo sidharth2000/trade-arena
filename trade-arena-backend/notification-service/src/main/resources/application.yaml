@@ -63,3 +63,10 @@ logging:
   level:
     com.tradearena.notificationservice: DEBUG
     org.springframework.mail: DEBUG
+
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 3000
+        readTimeout: 3000

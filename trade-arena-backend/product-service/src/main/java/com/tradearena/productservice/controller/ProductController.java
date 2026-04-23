@@ -66,6 +66,7 @@ public class ProductController {
 
     @GetMapping
     public ResponseEntity<PagedResponse<ProductListingSummary>> getProducts(
+    		@RequestHeader("X-User-Id") Long currentUserId,
             @RequestParam(required = false) Integer categoryId,
             @RequestParam(required = false) Integer subCategoryId,
             @RequestParam(required = false) Long sellerId,
@@ -73,7 +74,29 @@ public class ProductController {
             @RequestParam(defaultValue = "0")  int page,
             @RequestParam(defaultValue = "20") int size) {
         return ResponseEntity.ok(
-                service.getProducts(categoryId, subCategoryId, sellerId, status, page, size));
+                service.getProducts(categoryId, subCategoryId, sellerId, status,currentUserId, page, size));
+    }
+    
+    
+    @GetMapping("/my")
+    public ResponseEntity<PagedResponse<ProductListingSummary>> getMyProducts(
+            @RequestHeader("X-User-Id") Long currentUserId,
+            @RequestParam(required = false) Integer categoryId,
+            @RequestParam(required = false) Integer subCategoryId,
+            @RequestParam(required = false) ProductStatus status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+
+        return ResponseEntity.ok(
+                service.getMyProducts(
+                        categoryId,
+                        subCategoryId,
+                        currentUserId,   // 👈 sellerId = current user
+                        status,
+                        page,
+                        size
+                )
+        );
     }
 
     @GetMapping("/id/{id}")

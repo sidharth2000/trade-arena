@@ -158,6 +158,7 @@ public class NotificationService {
             case PAYMENT_SUCCESS    -> "Trade Arena: Payment confirmed" + title;
             case ACCOUNT_RESTRICTED -> "Trade Arena: Account restricted";
             case FALLBACK_OFFER     -> "Trade Arena: Item available for you" + title;
+            case BID_CONFIRMATION -> "Trade Arena: Your bid was placed" + title;
             default                 -> "Trade Arena: New notification" + title;
         };
     }

@@ -1,8 +1,0 @@
-package com.tradearena.adminservice.service;
-
-import com.tradearena.adminservice.dto.ApiResponse;
-import org.springframework.http.ResponseEntity;
-
-public interface CategoryService {
-    ResponseEntity<ApiResponse> getAllCategories();
-}

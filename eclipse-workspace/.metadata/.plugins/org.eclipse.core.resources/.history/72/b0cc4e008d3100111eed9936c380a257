@@ -1,5 +1,0 @@
-package com.tradearena.authservice.util;
-
-public class JwtUtil {
-
-}

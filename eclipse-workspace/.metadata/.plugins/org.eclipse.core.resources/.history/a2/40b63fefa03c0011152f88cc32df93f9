@@ -1,0 +1,5 @@
+package com.tradearena.authservice.service;
+
+public interface UserService {
+
+}

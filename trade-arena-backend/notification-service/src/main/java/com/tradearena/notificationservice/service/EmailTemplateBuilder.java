@@ -37,6 +37,7 @@ public class EmailTemplateBuilder {
             case ACCOUNT_RESTRICTED -> accountRestrictedTemplate(req);
             case FALLBACK_OFFER     -> fallbackOfferTemplate(req);
             case BID_PLACED         -> bidPlacedTemplate(req);
+            case BID_CONFIRMATION -> bidConfirmationTemplate(req);
             default                 -> genericTemplate(req);
         };
     }
@@ -148,6 +149,24 @@ public class EmailTemplateBuilder {
     private String genericTemplate(NotificationRequest req) {
         return wrap("#2c7a4b", "🔔", "Trade Arena Notification",
                 para(escape(req.getMessage())));
+    }
+    
+    
+    private String bidConfirmationTemplate(NotificationRequest req) {
+        String product = orDefault(req.getProductTitle(), "the item");
+        String amount  = formatAmount(req.getBidAmount());
+
+        String content =
+                para("Hi there,") +
+                para("Your bid has been successfully placed on <strong>" + escape(product) + "</strong>.") +
+                para("You're now in the running — keep an eye on the auction to stay ahead!") +
+                infoBox("#f0fdf4",
+                        row("Product", escape(product)),
+                        row("Your Bid Amount", amount)) +
+                button("http://localhost:5173/products/" + orDefault(req.getReferenceId(), ""),
+                        "View Auction", "#16a34a");
+
+        return wrap("#16a34a", "✅", "Bid Placed Successfully!", content);
     }
 
     // ── Layout wrapper ────────────────────────────────────────────────────

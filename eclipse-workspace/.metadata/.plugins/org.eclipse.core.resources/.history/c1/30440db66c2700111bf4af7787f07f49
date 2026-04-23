@@ -1,5 +1,0 @@
-package com.tradearena.apigateway.configuration;
-
-public class SecurityConfig {
-
-}

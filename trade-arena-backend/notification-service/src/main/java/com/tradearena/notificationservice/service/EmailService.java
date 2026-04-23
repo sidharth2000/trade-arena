@@ -1,20 +1,28 @@
 package com.tradearena.notificationservice.service;
 
-import com.tradearena.notificationservice.dto.NotificationRequest;
-import com.tradearena.notificationservice.model.NotificationType;
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
+import java.util.List;
+import java.util.Set;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Set;
+import com.tradearena.notificationservice.client.UserClient;
+import com.tradearena.notificationservice.dto.NotificationRequest;
+import com.tradearena.notificationservice.dto.UserResponse;
+import com.tradearena.notificationservice.model.NotificationType;
+
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 
 @Service
 public class EmailService {
+	
+	@Autowired
+	UserClient userClient;
 
     private final JavaMailSender mailSender;
     private final EmailTemplateBuilder templateBuilder;
@@ -31,6 +39,31 @@ public class EmailService {
             NotificationType.FALLBACK_OFFER,
             NotificationType.BID_PLACED
     );
+    
+    
+    private String resolveEmail(NotificationRequest req) {
+
+        // 1. If already present
+        if (req.getUserEmail() != null && !req.getUserEmail().isBlank()) {
+            return req.getUserEmail();
+        }
+
+        // 2. Fetch via Feign
+        if (req.getUserId() != null) {
+            try {
+                UserResponse user = userClient.getUserById(req.getUserId().intValue());
+
+                if (user != null && user.getEmail() != null) {
+                    return user.getEmail();
+                }
+
+            } catch (Exception e) {
+                System.err.println("Failed to fetch email for userId=" + req.getUserId());
+            }
+        }
+
+        return null;
+    }
 
     public EmailService(JavaMailSender mailSender, EmailTemplateBuilder templateBuilder) {
         this.mailSender = mailSender;
@@ -44,13 +77,14 @@ public class EmailService {
     // ── Option A: Notification Service builds the email ──────────────────
     @Async("emailTaskExecutor")
     public void sendEmail(NotificationRequest req) {
-        if (req.getUserEmail() == null || req.getUserEmail().isBlank()) return;
+    	String email = resolveEmail(req);
+    	if (email == null) return;
         if (!isEmailType(req.getType())) return;
 
         String subject = templateBuilder.buildSubject(req.getType(), req.getProductTitle());
         String body    = templateBuilder.buildBody(req);
 
-        send(List.of(req.getUserEmail()), null, subject, body);
+        send(List.of(email), null, subject, body);
     }
 
     // ── Option B: Caller provides full HTML ──────────────────────────────

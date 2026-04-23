@@ -33,6 +33,24 @@ export const productApi = {
     return get(`${PRODUCT_BASE}/id/${id}`)
   },
 
+  getMyProducts: async (userId, params = {}) => {
+  const query = new URLSearchParams(
+    Object.entries(params).filter(([, v]) => v !== undefined && v !== null)
+  ).toString()
+
+  const res = await fetch(`${PRODUCT_BASE}/my${query ? '?' + query : ''}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-User-Id': String(userId), // 👈 important
+      ...authHeaders(),
+    },
+  })
+
+  if (!res.ok) throw new Error(`getMyProducts failed: ${res.status}`)
+  return res.json()
+},
+
   /**
    * POST /api/products — multipart/form-data direct to 8083
    */

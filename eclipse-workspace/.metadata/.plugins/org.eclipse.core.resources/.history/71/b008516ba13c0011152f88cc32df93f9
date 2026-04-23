@@ -1,0 +1,5 @@
+package com.tradearena.notificationservice.dto;
+
+public class UserResponse {
+
+}

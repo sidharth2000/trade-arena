@@ -41,11 +41,14 @@ public class ProductService {
 
     public PagedResponse<ProductListingSummary> getProducts(
             Integer categoryId, Integer subCategoryId, Long sellerId,
-            ProductStatus status, int page, int size) {
+            ProductStatus status, Long currentUserId,
+            int page, int size) {
+
         Page<ProductListingSummary> result = repository
-                .findWithFilters(categoryId, subCategoryId, sellerId, status,
+                .findWithFilters(categoryId, subCategoryId, sellerId, status, currentUserId,
                         PageRequest.of(page, size))
                 .map(ProductListingSummary::fromEntity);
+
         return PagedResponse.from(result);
     }
 
@@ -184,5 +187,21 @@ public class ProductService {
 
     public Map<String, Object> getQuestions(Integer subCategoryId) {
         return adminClient.getQuestions(subCategoryId);
+    }
+
+    public PagedResponse<ProductListingSummary> getMyProducts(
+            Integer categoryId,
+            Integer subCategoryId,
+            Long currentUserId,
+            ProductStatus status,
+            int page,
+            int size) {
+
+        Page<ProductListingSummary> result = repository
+                .findMyProducts(categoryId, subCategoryId, currentUserId, status,
+                        PageRequest.of(page, size))
+                .map(ProductListingSummary::fromEntity);
+
+        return PagedResponse.from(result);
     }
 }

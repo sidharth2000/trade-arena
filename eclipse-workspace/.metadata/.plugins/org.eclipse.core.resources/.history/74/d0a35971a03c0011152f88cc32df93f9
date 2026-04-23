@@ -1,0 +1,5 @@
+package com.tradearena.notificationservice.client;
+
+public class UserClient {
+
+}

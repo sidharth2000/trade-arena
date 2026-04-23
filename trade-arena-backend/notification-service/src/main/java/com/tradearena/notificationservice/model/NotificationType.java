@@ -18,5 +18,7 @@ public enum NotificationType {
 
     FALLBACK_OFFER,
 
-    NEW_LISTING
+    NEW_LISTING,
+    
+    BID_CONFIRMATION, // mail to bid placer
 }
