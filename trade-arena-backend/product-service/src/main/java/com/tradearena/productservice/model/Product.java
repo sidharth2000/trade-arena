@@ -30,7 +30,7 @@ public class Product {
     @Column(nullable = false, length = 150)
     private String title;
 
-    @Column(length = 300)
+    @Column(length = 2000)
     private String description;
 
     @Column(nullable = false, precision = 19, scale = 4)
