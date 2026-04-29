@@ -9,6 +9,7 @@ import SellProduct from '../pages/SellProduct'
 import ChatPage from '../pages/ChatPage'
 import ProductsPage from '../pages/ProductsPage'
 import ProductDetailPage from '../pages/ProductDetailPage'
+import PaymentGatewayPage from '../pages/PaymentGatewayPage'  // ← NEW
 
 import CategoryConfiguration from '../pages/admin/CategoryConfiguration'
 import MyListings from '../pages/MyListings'
@@ -35,6 +36,7 @@ const router = createBrowserRouter([
             { index: true, element: <ProductsPage /> },
             { path: 'products', element: <ProductsPage /> },
             { path: 'products/:id', element: <ProductDetailPage /> },
+            { path: 'payment', element: <PaymentGatewayPage /> },  // ← NEW
             { path: 'sell', element: <SellProduct /> },
             { path: 'my-listings', element: <MyListings /> },
             { path: 'chat', element: <ChatPage /> },
@@ -46,7 +48,7 @@ const router = createBrowserRouter([
         element: <AdminLayout />,
         children: [
             { index: true, element: <Navigate to="/admin/home" replace /> },
-            { path: 'home', element: <AdminHome/> },
+            { path: 'home', element: <AdminHome /> },
             { path: 'category-management', element: <CategoryConfiguration /> },
         ],
     },

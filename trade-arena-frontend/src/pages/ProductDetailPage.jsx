@@ -900,6 +900,7 @@ export default function ProductDetailPage() {
                 </Button>
               ) : (
                 <Button variant="contained" size="large"
+                  onClick={() => navigate('/payment', { state: { product, price } })}
                   sx={{
                     flex: 1, minWidth: 148, py: 1.5, fontWeight: 700, fontSize: 15,
                     borderRadius: 2, background: '#ff9f00',

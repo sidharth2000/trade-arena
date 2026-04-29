@@ -1,6 +1,6 @@
-// All product calls go DIRECTLY to port 8083
-// Reason: gateway + product service both add CORS headers causing double header issue
+// All product calls go through the gateway at port 8080
 const PRODUCT_BASE = 'http://localhost:8080/api/products'
+const TRANSACTION_BASE = 'http://localhost:8080/api/transactions'
 
 function authHeaders() {
   const token = localStorage.getItem('token')
@@ -34,25 +34,25 @@ export const productApi = {
   },
 
   getMyProducts: async (userId, params = {}) => {
-  const query = new URLSearchParams(
-    Object.entries(params).filter(([, v]) => v !== undefined && v !== null)
-  ).toString()
+    const query = new URLSearchParams(
+      Object.entries(params).filter(([, v]) => v !== undefined && v !== null)
+    ).toString()
 
-  const res = await fetch(`${PRODUCT_BASE}/my${query ? '?' + query : ''}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-User-Id': String(userId), // 👈 important
-      ...authHeaders(),
-    },
-  })
+    const res = await fetch(`${PRODUCT_BASE}/my${query ? '?' + query : ''}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-Id': String(userId),
+        ...authHeaders(),
+      },
+    })
 
-  if (!res.ok) throw new Error(`getMyProducts failed: ${res.status}`)
-  return res.json()
-},
+    if (!res.ok) throw new Error(`getMyProducts failed: ${res.status}`)
+    return res.json()
+  },
 
   /**
-   * POST /api/products — multipart/form-data direct to 8083
+   * POST /api/products — multipart/form-data
    */
   createProduct: async (payload, userId, images = []) => {
     const formData = new FormData()
@@ -69,7 +69,6 @@ export const productApi = {
       headers: {
         'X-User-Id': String(userId),
         ...authHeaders(),
-        // No Content-Type — browser sets multipart boundary automatically
       },
       body: formData,
     })
@@ -92,6 +91,16 @@ export const productApi = {
     return res.json()
   },
 
+  // PUT /api/products/id/{id}/mark-sold
+  markAsSold: async (id) => {
+    const res = await fetch(`${PRODUCT_BASE}/id/${id}/mark-sold`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    })
+    if (!res.ok) throw new Error(`markAsSold failed: ${res.status}`)
+    return res.status === 204 ? null : res.json()
+  },
+
   // GET /api/products/categories
   getAllCategories: async () => {
     return get(`${PRODUCT_BASE}/categories`)
@@ -105,5 +114,31 @@ export const productApi = {
   // GET /api/products/subcategories/{id}/questions
   getQuestionsBySubCategory: async (subCategoryId) => {
     return get(`${PRODUCT_BASE}/subcategories/${subCategoryId}/questions`)
+  },
+
+  // ─── Transaction APIs ──────────────────────────────────────
+
+  /**
+   * POST /api/transactions
+   * Records a payment and marks the product as SOLD on the backend.
+   */
+  recordTransaction: async ({ productId, userId, price, paymentMethod }) => {
+    const res = await fetch(TRANSACTION_BASE, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ productId, userId, price, paymentMethod }),
+    })
+    if (!res.ok) throw new Error(`recordTransaction failed: ${res.status}`)
+    return res.json()
+  },
+
+  // GET /api/transactions/product/{productId}
+  getTransactionsByProduct: async (productId) => {
+    return get(`${TRANSACTION_BASE}/product/${productId}`)
+  },
+
+  // GET /api/transactions/user/{userId}
+  getTransactionsByUser: async (userId) => {
+    return get(`${TRANSACTION_BASE}/user/${userId}`)
   },
 }
